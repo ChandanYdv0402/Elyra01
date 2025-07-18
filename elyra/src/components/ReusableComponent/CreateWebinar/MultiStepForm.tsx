@@ -6,7 +6,7 @@ import { Check, ChevronRight, AlertCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useWebinarStore } from "@/store/useWebinarStore";
-import { createWebinar } from "@/action/webinar";
+import { createWebinar } from "@/actions/webinar";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Separator } from "@/components/ui/separator";

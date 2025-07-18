@@ -1,5 +1,5 @@
-import { onAuthenticateUser } from "@/action/auth";
-import { getAllProductsFromStripe } from "@/action/stripe";
+import { onAuthenticateUser } from "@/actions/auth";
+import { getAllProductsFromStripe } from "@/actions/stripe";
 import Header from "@/components/ReusableComponent/LayoutComponents/Header";
 import Sidebar from "@/components/ReusableComponent/LayoutComponents/Sidebar";
 import { UserWithAiAgent } from "@/lib/type";

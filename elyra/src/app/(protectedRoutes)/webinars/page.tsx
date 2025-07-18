@@ -6,7 +6,7 @@ import React from "react";
 import WebinarCard from "./_components/WebinarCard";
 import PageHeader from "@/components/ReusableComponent/PageHeader";
 import { onAuthenticateUser } from "@/action/auth";
-import { getWebinarByPresenterId } from "@/action/webinar";
+import { getWebinarByPresenterId } from "@/actions/webinar";
 import { redirect } from "next/navigation";
 import { Webinar, WebinarStatusEnum } from "@prisma/client";
 import { Webcam } from "lucide-react";

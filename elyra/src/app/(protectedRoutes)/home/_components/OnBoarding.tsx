@@ -1,6 +1,6 @@
 import { onBoardingSteps } from '@/lib/data'
 import Link from 'next/link'
-import { getOnboardingStatus } from '@actions/onboarding'
+import { getOnboardingStatus } from '@/actions/onboarding'
 import { ArrowRight, Check } from 'lucide-react'
 
 const OnBoarding = async () => {

@@ -1,6 +1,6 @@
 import React from "react";
 
-const Spotlight = () => {
+const Elyra = () => {
   return (
     <svg
       width="24"
@@ -18,4 +18,4 @@ const Spotlight = () => {
   );
 };
 
-export default Spotlight;
+export default Elyra;

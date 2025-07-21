@@ -5,7 +5,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import Spotlight from '@/icons/Spotlight'
+import Elyra from '@/icons/Elyra'
 import { sidebarData } from '@/lib/data'
 import { UserButton } from '@clerk/nextjs'
 import Link from 'next/link'
@@ -17,7 +17,7 @@ const Sidebar = () => {
   return (
     <div className="w-18 sm:w-24 h-screen sticky top-0 py-10 px-2 sm:px-6 border rounded-lg   bg-background border-border flex flex-col items-center justify-start gap-10">
       <div className="">
-        <Spotlight />
+        <Elyra />
       </div>
       {/* Sidebar Menu */}
       <div className="w-full h-full justify-between items-center flex flex-col">

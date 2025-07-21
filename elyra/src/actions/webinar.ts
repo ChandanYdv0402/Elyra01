@@ -4,7 +4,6 @@ import { prismaClient } from "@/lib/prismaClient";
 import { WebinarFormState } from "@/store/useWebinarStore";
 import { revalidatePath } from "next/cache";
 import { onAuthenticateUser } from "./auth";
-import { WebinarStatusEnum } from "@prisma/client";
 
 export const createWebinar = async (formData: WebinarFormState) => {
   try {
@@ -110,98 +109,3 @@ function combineDateTime(
   return result;
 }
 
-export const getWebinarByPresenterId = async (
-  presenterId: string,
-  webinarStatus?: string
-) => {
-  try {
-   let statusFilter: WebinarStatusEnum | undefined;
-   
-   switch (webinarStatus) {
-      case "upcoming":
-        statusFilter = WebinarStatusEnum.SCHEDULED;
-        break;
-      case "ended":
-        statusFilter = WebinarStatusEnum.ENDED;
-        break;
-      default:
-        statusFilter = undefined;
-    }
-
-
-    const webinars = await prismaClient.webinar.findMany({
-      where: {
-        presenterId,
-        webinarStatus: statusFilter
-      },
-      include: {
-        presenter: {
-          select: {
-            id: true,
-            name: true,
-            stripeConnectId: true,
-          },
-        },
-      },
-    });
-
-    return webinars;
-  } catch (error) {
-    console.error("Error fetching webinars:", error);
-    throw new Error("Failed to fetch webinars");
-  }
-};
-
-export const getWebinarById = async (webinarId: string) => {
-  try {
-    const webinar = await prismaClient.webinar.findUnique({
-      where: { id: webinarId },
-      include: {
-        presenter: {
-          select: {
-            id: true,
-            name: true,
-            profileImage: true,
-            stripeConnectId: true,
-          },
-        },
-      },
-    });
-
-    return webinar;
-  } catch (error) {
-    console.error("Error fetching webinar:", error);
-    throw new Error("Failed to fetch webinar");
-  }
-};
-
-// change webinar status
-export const changeWebinarStatus = async (
-  webinarId: string,
-  status: WebinarStatusEnum
-) => {
-  try {
-    const webinar = await prismaClient.webinar.update({
-      where: {
-        id: webinarId,
-      },
-      data: {
-        webinarStatus: status,
-      },
-    });
-
-    return {
-      status: 200,
-      success: true,
-      message: "Webinar status updated successfully",
-      data: webinar,
-    };
-  } catch (error) {
-    console.error("Error updating webinar status:", error);
-    return {
-      status: 500,
-      success: false,
-      message: "Failed to update webinar status. Please try again.",
-    };
-  }
-};

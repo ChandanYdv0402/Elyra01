@@ -7,8 +7,19 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import MultiStepForm from "./MultiStepForm";
+import { SuccessStep } from "./SuccessStep";
+import BasicInfoStep from "./BasicInfoStep";
+import CTAStep from "./CTAStep";
+import AdditionalInfoStep from "./AdditionalInfoStep";
+import { useWebinarStore } from "@/store/useWebinarStore";
+import PlusIcon from "@/icons/PlusIcon";
+import Stripe from "stripe";
+import { AiAgents } from "@prisma/client";
 
-
+type Props = {
+  assistants: AiAgents[] | [];
+  stripeProducts: Stripe.Product[] | [];
+};
 
 const CreateWebinarButton = ({ assistants, stripeProducts }: Props) => {
   const { isModalOpen, isComplete, setModalOpen, setComplete, resetForm } =
@@ -17,7 +28,29 @@ const CreateWebinarButton = ({ assistants, stripeProducts }: Props) => {
   const [webinarLink, setWebinarLink] = useState<string>("");
 
   const steps = [
-    
+    {
+      id: "basicInfo",
+      title: "Basic Information",
+      description: "Please fill out the standard info needed for your webinar",
+      component: <BasicInfoStep />,
+    },
+    {
+      id: "cta",
+      title: "CTA",
+      description:
+        "Please provide the end-point for your customers through your webinar",
+      component: (
+        <CTAStep assistants={assistants} stripeProducts={stripeProducts} />
+      ),
+    },
+    {
+      id: "additionalInfo",
+      title: "Additional information",
+      description:
+        "Please fill out information about additional options if necessary",
+      component: <AdditionalInfoStep />,
+    },
+  ];
 
   const handleComplete = (webinarId: string) => {
     setComplete(true);

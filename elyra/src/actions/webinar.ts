@@ -4,7 +4,7 @@ import { prismaClient } from "@/lib/prismaClient";
 import { WebinarFormState } from "@/store/useWebinarStore";
 import { revalidatePath } from "next/cache";
 import { onAuthenticateUser } from "./auth";
-
+import { WebinarStatusEnum } from "@prisma/client";
 
 export const createWebinar = async (formData: WebinarFormState) => {
   try {

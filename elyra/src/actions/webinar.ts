@@ -4,6 +4,7 @@ import { prismaClient } from "@/lib/prismaClient";
 import { WebinarFormState } from "@/store/useWebinarStore";
 import { revalidatePath } from "next/cache";
 import { onAuthenticateUser } from "./auth";
+import { WebinarStatusEnum } from "@prisma/client";
 
 export const createWebinar = async (formData: WebinarFormState) => {
   try {
@@ -108,4 +109,46 @@ function combineDateTime(
   result.setHours(hours, minutes, 0, 0);
   return result;
 }
+
+export const getWebinarByPresenterId = async (
+  presenterId: string,
+  webinarStatus?: string
+) => {
+  try {
+   let statusFilter: WebinarStatusEnum | undefined;
+   
+   switch (webinarStatus) {
+      case "upcoming":
+        statusFilter = WebinarStatusEnum.SCHEDULED;
+        break;
+      case "ended":
+        statusFilter = WebinarStatusEnum.ENDED;
+        break;
+      default:
+        statusFilter = undefined;
+    }
+
+
+    const webinars = await prismaClient.webinar.findMany({
+      where: {
+        presenterId,
+        webinarStatus: statusFilter
+      },
+      include: {
+        presenter: {
+          select: {
+            id: true,
+            name: true,
+            stripeConnectId: true,
+          },
+        },
+      },
+    });
+
+    return webinars;
+  } catch (error) {
+    console.error("Error fetching webinars:", error);
+    throw new Error("Failed to fetch webinars");
+  }
+};
 

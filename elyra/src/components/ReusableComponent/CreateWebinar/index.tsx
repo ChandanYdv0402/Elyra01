@@ -29,7 +29,7 @@ const CreateWebinarButton = ({ assistants, stripeProducts }: Props) => {
 
   const steps = [
     {
-      id: "basicInfo",
+      id: "basicInfo", 
       title: "Basic Information",
       description: "Please fill out the standard info needed for your webinar",
       component: <BasicInfoStep />,

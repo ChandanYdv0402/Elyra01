@@ -198,6 +198,7 @@ const CTAStep = ({ assistants, stripeProducts }: Props) => {
                 />
             </div>
           </div>
+          
 
           <Select
             value={priceId || ""}

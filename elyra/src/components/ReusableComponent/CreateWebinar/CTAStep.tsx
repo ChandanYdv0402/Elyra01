@@ -3,8 +3,7 @@
 import type React from "react";
 
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+
 import { X, Search } from "lucide-react";
 import {
   Select,

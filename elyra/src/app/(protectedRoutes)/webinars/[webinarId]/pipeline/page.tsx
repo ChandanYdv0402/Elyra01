@@ -9,7 +9,8 @@ import LeadIcon                  from "@/icons/LeadIcon";
 import PipelineIcon              from "@/icons/PipelineIcon";
 import { HomeIcon }              from "lucide-react";
 import PipelineLayout            from "./components/PipelineLayout";
-import { formatColumnTitle }     from "./components/utlis";
+-import { formatColumnTitle }     from "./components/utlis";
++import { formatColumnTitle }     from "./components/utils";
 import { AttendedTypeEnum }      from "@prisma/client";
 
 type Props = {

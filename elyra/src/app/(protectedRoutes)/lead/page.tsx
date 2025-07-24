@@ -12,7 +12,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import PageHeader from '@/components/ReusableComponent/PageHeader'
 import { Webcam } from 'lucide-react'
-import { getLeads } from '@/action/leads'
+import {getLeads} from '@/actions/leads'
 import { redirect } from 'next/navigation'
 import { Users } from 'lucide-react'
 

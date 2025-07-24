@@ -10,6 +10,25 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 +import HomeIcon        from "@/icons/HomeIcon";
 +import LeadIcon        from "@/icons/LeadIcon";
 +import { Webcam }      from "lucide-react";
+ import PageHeader …;
+ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
++import TabsContent   from "@/components/ui/tabs";              // you'll fix this later
+ import { getWebinarByPresenterId } from "@/actions/webinar";
++import WebinarCard   from "./_components/WebinarCard";
+
+ const page = async ({ searchParams }) => {
+   …  
+-    <Tabs defaultValue="all" …>
++    <Tabs defaultValue="all" className="w-full">
+       <TabsList>…</TabsList>
++      <TabsContent value="all">
++        {webinars.length > 0
++          ? webinars.map((w,i) => <WebinarCard key={i} webinar={w} />)
++          : <div>No Webinar found</div>
++        }
++      </TabsContent>
+     </Tabs>
+
 
  const page = async ({ searchParams }) => {
    …  

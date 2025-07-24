@@ -28,6 +28,14 @@ const page = async ({ params }: Props) => {
     redirect("/sign-in");
   }
 
+  if (checkUser.user.id !== pipelineData.presenter.id) {
+    return (
+      <div className="text-3xl h-[400px] flex justify-center items-center">
+        You are not authorized to view this page
+      </div>
+    );
+  }
+
   return <div>Loading pipeline attendance...</div>;
 };
 

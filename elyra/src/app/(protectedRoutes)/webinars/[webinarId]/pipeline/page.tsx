@@ -1,13 +1,16 @@
 "use client";
 
 import React from "react";
-import { onAuthenticateUser }   from "@/action/auth";
-import { redirect }             from "next/navigation";
-import { getWebinarAttendance } from "@/action/attendance";
-import PageHeader               from "@/components/ReusableComponent/PageHeader";
-import LeadIcon                 from "@/icons/LeadIcon";
-import PipelineIcon             from "@/icons/PipelineIcon";
-import { HomeIcon }             from "lucide-react";
+import { onAuthenticateUser }    from "@/action/auth";
+import { redirect }              from "next/navigation";
+import { getWebinarAttendance }  from "@/action/attendance";
+import PageHeader                from "@/components/ReusableComponent/PageHeader";
+import LeadIcon                  from "@/icons/LeadIcon";
+import PipelineIcon              from "@/icons/PipelineIcon";
+import { HomeIcon }              from "lucide-react";
+import PipelineLayout            from "./components/PipelineLayout";
+import { formatColumnTitle }     from "./components/utlis";
+import { AttendedTypeEnum }      from "@prisma/client";
 
 type Props = {
   params: Promise<{
@@ -50,7 +53,16 @@ const page = async ({ params }: Props) => {
         placeholder="Search Name, Tag or Email"
       />
       {/* Pipelines */}
-      <div>Loading pipeline attendance...</div>
+      <div className="flex overflow-x-auto pb-4 gap-4 md:gap-6">
+        {Object.entries(pipelineData.data).map(([columnType, columnData]) => (
+          <PipelineLayout
+            key={columnType}
+            title={formatColumnTitle(columnType as AttendedTypeEnum)}
+            count={columnData.count}
+            users={columnData.users}
+          />
+        ))}
+      </div>
     </div>
   );
 };

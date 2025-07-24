@@ -5,6 +5,12 @@
  import { getWebinarByPresenterId } from "@/actions/webinar";
  import { WebinarStatusEnum }       from "@prisma/client";
 +import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+ import Link from "next/link";
+ …
+-      <TabsTrigger value="all">All</TabsTrigger>
++      <TabsTrigger value="all">
++        <Link href={`/webinars?webinarStatus=all`}>All</Link>
++      </TabsTrigger>
 
  const page = async ({ searchParams }) => {
    …  

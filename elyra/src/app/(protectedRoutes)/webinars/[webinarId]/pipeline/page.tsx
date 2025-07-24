@@ -9,8 +9,7 @@ import LeadIcon                  from "@/icons/LeadIcon";
 import PipelineIcon              from "@/icons/PipelineIcon";
 import { HomeIcon }              from "lucide-react";
 import PipelineLayout            from "./components/PipelineLayout";
--import { formatColumnTitle }     from "./components/utlis";
-+import { formatColumnTitle }     from "./components/utils";
+import { formatColumnTitle }     from "./components/utils";
 import { AttendedTypeEnum }      from "@prisma/client";
 
 type Props = {
@@ -50,8 +49,11 @@ const page = async ({ params }: Props) => {
         leftIcon={<LeadIcon className="w-4 h-4" />}
         mainIcon={<PipelineIcon className="w-12 h-12" />}
         rightIcon={<HomeIcon className="w-3 h-3" />}
-        heading="Keep track of all of your customers"
-        placeholder="Search Name, Tag or Email"
+-       heading="Keep track of all of your customers"
++       heading="Keep track of all your customers"
+-       placeholder="Search Name, Tag or Email"
++       placeholder="Search by name, tag, or email"
++       className="mb-6"
       />
       {/* Pipelines */}
       <div className="flex overflow-x-auto pb-4 gap-4 md:gap-6">

@@ -15,6 +15,20 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 +import TabsContent   from "@/components/ui/tabs";              // you'll fix this later
  import { getWebinarByPresenterId } from "@/actions/webinar";
 +import WebinarCard   from "./_components/WebinarCard";
+ … in the same `<Tabs>` block …
++      <TabsContent value="upcoming">
++        {webinars.length > 0
++          ? webinars.map((w,i) => <WebinarCard key={i} webinar={w} />)
++          : <div>No Webinar found</div>
++        }
++      </TabsContent>
++      <TabsContent value="ended">
++        {webinars.length > 0
++          ? webinars.map((w,i) => <WebinarCard key={i} webinar={w} />)
++          : <div>No Webinar found</div>
++        }
++      </TabsContent>
+
 
  const page = async ({ searchParams }) => {
    …  

@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 
 const StripeConnectPage = async () => {
-  const userExist ff = await onAuthenticateUser()
+  const userExist = await onAuthenticateUser()
 
   if (!userExist.user) {
     redirect('/sign-in')

@@ -6,6 +6,7 @@ import Stripe from "stripe";
 import { prismaClient } from "@/lib/prismaClient";
 import { subscriptionPriceId } from "@/lib/data";
 import { changeAttendanceType } from "./attendance";
+import { AttendedTypeEnum } from "@prisma/client";
 
 export const getAllProductsFromStripe = async () => {
   /* same as Version 1 */
@@ -25,42 +26,28 @@ export const onGetStripeClientSecret = async (
   email: string,
   userId: string
 ) => {
-  try {
-    let customer: Stripe.Customer;
-    const existing = await stripe.customers.list({ email });
-    if (existing.data.length > 0) {
-      customer = existing.data[0];
-    } else {
-      customer = await stripe.customers.create({
-        email,
-        metadata: { userId },
-      });
-    }
+  /* same as Version 3 */
+};
 
+export const updateSubscription = async (subscription: Stripe.Subscription) => {
+  try {
+    const userId = subscription.metadata.userId;
     await prismaClient.user.update({
       where: { id: userId },
-      data: { stripeCustomerId: customer.id },
+      data: { subscription: subscription.status === "active" },
     });
-
-    const subscription = await stripe.subscriptions.create({
-      customer: customer.id,
-      items: [{ price: subscriptionPriceId }],
-      payment_behavior: "default_incomplete",
-      expand: ["latest_invoice.payment_intent"],
-      metadata: { userId },
-    });
-
-    const paymentIntent = (
-      subscription.latest_invoice as Stripe.Invoice
-    ).payment_intent as Stripe.PaymentIntent;
-
-    return {
-      status: 200,
-      secret: paymentIntent.client_secret,
-      customerId: customer.id,
-    };
   } catch (error) {
-    console.error("Subscription creation error:", error);
-    return { status: 400, message: "Failed to create subscription" };
+    console.error("Error updating subscription:", error);
+  }
+};
+
+export const updateAttendee = async (attendeeId: string) => {
+  try {
+    await prismaClient.attendance.update({
+      where: { id: attendeeId },
+      data: { attendedType: AttendedTypeEnum.CONVERTED },
+    });
+  } catch (error) {
+    console.error("Error updating attendee:", error);
   }
 };

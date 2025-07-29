@@ -3,6 +3,8 @@
 import { stripe } from "@/lib/stripe";
 import { onAuthenticateUser } from "./auth";
 import Stripe from "stripe";
+import { prismaClient } from "@/lib/prismaClient";
+import { subscriptionPriceId } from "@/lib/data";
 import { changeAttendanceType } from "./attendance";
 
 export const getAllProductsFromStripe = async () => {
@@ -16,25 +18,49 @@ export const createCheckoutLink = async (
   webinarId: string,
   bookCall: boolean = false
 ) => {
-  try {
-    const session = await stripe.checkout.sessions.create(
-      {
-        line_items: [{ price: priceId, quantity: 1 }],
-        mode: "payment",
-        success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/`,
-        cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/`,
-        metadata: { attendeeId, webinarId },
-      },
-      { stripeAccount: stripeId }
-    );
+  /* same as Version 2 */
+};
 
-    if (bookCall) {
-      await changeAttendanceType(attendeeId, webinarId, "ADDED_TO_CART");
+export const onGetStripeClientSecret = async (
+  email: string,
+  userId: string
+) => {
+  try {
+    let customer: Stripe.Customer;
+    const existing = await stripe.customers.list({ email });
+    if (existing.data.length > 0) {
+      customer = existing.data[0];
+    } else {
+      customer = await stripe.customers.create({
+        email,
+        metadata: { userId },
+      });
     }
 
-    return { sessionUrl: session.url, status: 200, success: true };
+    await prismaClient.user.update({
+      where: { id: userId },
+      data: { stripeCustomerId: customer.id },
+    });
+
+    const subscription = await stripe.subscriptions.create({
+      customer: customer.id,
+      items: [{ price: subscriptionPriceId }],
+      payment_behavior: "default_incomplete",
+      expand: ["latest_invoice.payment_intent"],
+      metadata: { userId },
+    });
+
+    const paymentIntent = (
+      subscription.latest_invoice as Stripe.Invoice
+    ).payment_intent as Stripe.PaymentIntent;
+
+    return {
+      status: 200,
+      secret: paymentIntent.client_secret,
+      customerId: customer.id,
+    };
   } catch (error) {
-    console.log("Error creating checkout link", error);
-    return { error: "Error creating checkout link", status: 500, success: false };
+    console.error("Subscription creation error:", error);
+    return { status: 400, message: "Failed to create subscription" };
   }
 };

@@ -1,5 +1,5 @@
 "use client";
-import { onGetStripeClientSecret } from "@/action/stripe";
+import { onGetStripeClientSecret } from "@/actions/stripe";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,

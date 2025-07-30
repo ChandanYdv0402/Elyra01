@@ -241,6 +241,6 @@ End with: "Thank you for taking the time to chat today. [Personalized closing ba
 Remember that your ultimate goal is to identify prospects who would genuinely benefit from GrowthPartners' solutions while providing value in every conversation, regardless of qualification outcome. Always leave prospects with a positive impression of the company, even if they're not a good fit right now.
 you are th best `
 
-export const subscriptionPriceId = `price_1RKTQaIld5Bk5htqA7t1HWy4`
+export const subscriptionPriceId = `price_1RSy5l03BzRrZLAUd0ep8iSO`
 
 export const pipelineTags = ['New', 'Hot Lead']

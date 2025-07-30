@@ -1,7 +1,7 @@
 
 
-import { changeAttendanceType } from "@/action/attendance";
-import { updateSubscription } from "@/action/stripe";
+import { changeAttendanceType } from "@/actions/attendance";
+import { updateSubscription } from "@/actions/stripe";
 import { stripe } from "@/lib/stripe";
 import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";

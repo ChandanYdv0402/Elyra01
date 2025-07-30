@@ -1,6 +1,7 @@
 "use server";
 
 import { stripe } from "@/lib/stripe";
+import { updateSubscription } from "@/action/stripe";
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import Stripe from "stripe";
@@ -24,10 +25,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ received: true });
     }
 
+    const subscription = stripeEvent.data.object as Stripe.Subscription;
+    await updateSubscription(subscription);
+    console.log("Processed subscription event:", stripeEvent.type);
+
     return NextResponse.json({ received: true });
   } catch (err) {
-    console.error("Signature verification failed:", err);
-    return new NextResponse("Invalid signature", { status: 400 });
+    console.error("Webhook error:", err);
+    return new NextResponse("Webhook error", { status: 500 });
   }
 }
 

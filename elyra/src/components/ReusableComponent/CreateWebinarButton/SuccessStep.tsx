@@ -12,8 +12,12 @@ interface SuccessStepProps {
   onClose?: () => void
 }
 
-export function SuccessStep({ webinarLink, onCreateNew }: SuccessStepProps) {
+export function SuccessStep({
+  webinarLink ,
+  onCreateNew,
+}: SuccessStepProps) {
   const [copied, setCopied] = useState(false)
+
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(webinarLink)
@@ -59,3 +63,4 @@ export function SuccessStep({ webinarLink, onCreateNew }: SuccessStepProps) {
     </div>
   )
 }
+

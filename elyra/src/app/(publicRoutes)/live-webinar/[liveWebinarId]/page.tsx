@@ -1,6 +1,8 @@
 import { getWebinarById } from '@/action/webinar'
 import { onAuthenticateUser } from '@/action/auth'
 import { getStreamRecording } from '@/action/streamIo'
+import RenderWebinar from './_components/Common/RenderWebinar'
+import { WebinarWithPresenter } from '@/lib/type'
 
 type Props = {
   params: Promise<{ liveWebinarId: string }>
@@ -22,15 +24,21 @@ const page = async ({ params, searchParams }: Props) => {
     )
   }
 
+  const apiKey = process.env.NEXT_PUBLIC_STREAM_API_KEY as string
   let recording = null
   if (webinarData.webinarStatus === 'ENDED') {
     recording = await getStreamRecording(webinarData.id)
-    console.log('Loaded recording:', recording)
   }
 
   return (
     <div className="w-full min-h-screen mx-auto">
-      <p>Recording data: {recording ? 'available' : 'none'}</p>
+      <RenderWebinar
+        error={error}
+        user={checkUser.user || null}
+        webinar={webinarData as WebinarWithPresenter}
+        apiKey={apiKey}
+        recording={recording?.data || null}
+      />
     </div>
   )
 }

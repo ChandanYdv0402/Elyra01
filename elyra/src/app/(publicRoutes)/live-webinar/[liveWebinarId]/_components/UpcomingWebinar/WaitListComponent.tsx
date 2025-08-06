@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 type WaitListComponentProps = {
@@ -11,6 +12,14 @@ type WaitListComponentProps = {
 };
 
 const WaitListComponent = ({ webinarId, webinarStatus, onRegistered }: WaitListComponentProps) => {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // submission logic to be added
+  };
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -20,7 +29,23 @@ const WaitListComponent = ({ webinarId, webinarStatus, onRegistered }: WaitListC
         <DialogHeader>
           <DialogTitle>Join Waitlist</DialogTitle>
         </DialogHeader>
-        {/* form goes here */}
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <Input
+            type="text"
+            placeholder="Your Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
+          <Input
+            type="email"
+            placeholder="Your Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <Button type="submit">Join Waitlist</Button>
+        </form>
       </DialogContent>
     </Dialog>
   );

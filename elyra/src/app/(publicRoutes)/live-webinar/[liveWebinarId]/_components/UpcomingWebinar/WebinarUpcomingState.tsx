@@ -7,10 +7,10 @@ import Image from "next/image";
 import WaitListComponent from "./WaitListComponent";
 import CountdownTimer from "./CountdownTimer";
 import { toast } from "sonner";
-import { changeWebinarStatus } from "@/action/webinar";
+import { changeWebinarStatus } from "@/actions/webinar";
 import { useRouter } from "next/navigation";
-import { sendBulkEmail } from "@/action/resend";
-import { createAndStartStream } from "@/action/stremIo";
+import { sendBulkEmail } from "@/actions/resend";
+import { createAndStartStream } from "@/actions/stremIo";
 
 
 type Props = {

@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Copy, Check, ExternalLink } from "lucide-react"
+import { Copy, Check, PlusCircle, ExternalLink } from "lucide-react"
 import Link from "next/link"
 
 interface SuccessStepProps {
@@ -23,6 +23,12 @@ export function SuccessStep({ webinarLink, onCreateNew }: SuccessStepProps) {
 
   return (
     <div className="relative text-center space-y-6 py-8 px-6">
+      <div className="flex items-center justify-center">
+        <div className="bg-green-500 rounded-full p-2">
+          <Check className="h-6 w-6 text-primary" />
+        </div>
+      </div>
+
       <h2 className="text-2xl font-bold">Your webinar has been created</h2>
       <p className="text-foreground">You can share the link with your viewers for them to join</p>
 
@@ -41,6 +47,15 @@ export function SuccessStep({ webinarLink, onCreateNew }: SuccessStepProps) {
           </Button>
         </Link>
       </div>
+
+      {onCreateNew && (
+        <div className="mt-8">
+          <Button onClick={onCreateNew} variant="outline" className="border-gray-700 text-white hover:bg-gray-800">
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Create Another Webinar
+          </Button>
+        </div>
+      )}
     </div>
   )
 }

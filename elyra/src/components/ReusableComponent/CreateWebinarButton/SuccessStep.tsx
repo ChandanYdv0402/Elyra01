@@ -3,7 +3,8 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Copy, Check } from "lucide-react"
+import { Copy, Check, ExternalLink } from "lucide-react"
+import Link from "next/link"
 
 interface SuccessStepProps {
   webinarLink: string
@@ -24,11 +25,21 @@ export function SuccessStep({ webinarLink, onCreateNew }: SuccessStepProps) {
     <div className="relative text-center space-y-6 py-8 px-6">
       <h2 className="text-2xl font-bold">Your webinar has been created</h2>
       <p className="text-foreground">You can share the link with your viewers for them to join</p>
+
       <div className="flex mt-4 max-w-md mx-auto">
         <Input value={webinarLink} readOnly className="bg-muted border-input rounded-r-none" />
         <Button onClick={handleCopyLink} variant="outline" className="rounded-l-none border-l-0 border-gray-800">
           {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
         </Button>
+      </div>
+
+      <div className="mt-4 flex justify-center">
+        <Link href={webinarLink} target="_blank">
+          <Button variant="outline" className="border-muted text-primary hover:bg-input">
+            <ExternalLink className="mr-2 h-4 w-4" />
+            Preview Webinar
+          </Button>
+        </Link>
       </div>
     </div>
   )

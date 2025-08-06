@@ -1,5 +1,6 @@
 import { getWebinarById } from '@/action/webinar'
 import { onAuthenticateUser } from '@/action/auth'
+import { getStreamRecording } from '@/action/streamIo'
 
 type Props = {
   params: Promise<{ liveWebinarId: string }>
@@ -11,9 +12,8 @@ const page = async ({ params, searchParams }: Props) => {
   const { error } = await searchParams
 
   const checkUser = await onAuthenticateUser()
-  const user = checkUser.user || null
-
   const webinarData = await getWebinarById(liveWebinarId)
+
   if (!webinarData) {
     return (
       <div className="w-full min-h-screen flex justify-center items-center text-lg sm:text-4xl">
@@ -22,9 +22,15 @@ const page = async ({ params, searchParams }: Props) => {
     )
   }
 
+  let recording = null
+  if (webinarData.webinarStatus === 'ENDED') {
+    recording = await getStreamRecording(webinarData.id)
+    console.log('Loaded recording:', recording)
+  }
+
   return (
     <div className="w-full min-h-screen mx-auto">
-      <p>User: {user ? user.id : 'guest'}</p>
+      <p>Recording data: {recording ? 'available' : 'none'}</p>
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { onAuthenticateUser } from '@/action/auth'
+import { onAuthenticateUser } from '@/actions/auth'
 import { getStripeOAuthLink } from '@/lib/stripe/utlis'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'

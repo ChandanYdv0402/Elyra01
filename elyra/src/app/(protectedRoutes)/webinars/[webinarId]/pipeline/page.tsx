@@ -5,9 +5,9 @@ import { HomeIcon } from "lucide-react";
 import React from "react";
 import PipelineLayout from "./components/PipelineLayout";
 import { formatColumnTitle } from "./components/utlis";
-import { getWebinarAttendance } from "@/action/attendance";
+import { getWebinarAttendance } from "@/actions/attendance";
 import { AttendedTypeEnum } from "@prisma/client";
-import { onAuthenticateUser } from "@/action/auth";
+import { onAuthenticateUser } from "@/actions/auth";
 import { redirect } from "next/navigation";
 
 type Props = {

@@ -2,7 +2,7 @@
 import { usePathname, useRouter } from 'next/navigation'
 import PurpleIcon from '../PurpleIcon'
 import LightningIcon from '@/icons/LightningIcon'
-import CreateWebinarButton from '../CreateWebinar'
+import CreateWebinarButton from '../CreateWebinarButton'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
 import { AiAgents} from '@prisma/client'

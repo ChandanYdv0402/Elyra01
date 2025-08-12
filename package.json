@@ -1,6 +1,8 @@
 {
   "dependencies": {
     "@stream-io/node-sdk": "^0.4.23",
-    "@stream-io/video-react-sdk": "^1.14.6"
+    "@stream-io/video-react-sdk": "^1.14.6",
+    "stream-chat": "^8.60.0",
+    "stream-chat-react": "^12.14.0"
   }
 }

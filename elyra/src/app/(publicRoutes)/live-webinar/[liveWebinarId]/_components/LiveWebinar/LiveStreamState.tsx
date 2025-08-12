@@ -9,7 +9,7 @@ import {
 import { User } from "@prisma/client";
 import { WebinarWithPresenter } from "@/lib/type";
 import CustomLivestreamPlayer from "./CustomLiveStreamPlayer";
-import { getTokenForHost } from "@/action/stremIo";
+import { getTokenForHost } from "@/action/streamIo";
 
 type Props = {
   apiKey: string;
@@ -51,7 +51,13 @@ const LiveStreamState = ({ apiKey, callId, webinar, user }: Props) => {
     };
 
     init();
-  }, [apiKey, webinar]);
+  }, [
+    apiKey,
+    callId,
+    webinar.presenterId,
+    webinar.presenter.name,
+    webinar.presenter.profileImage,
+  ]);
 
   if (!client || !hostToken) return null;
 

@@ -97,6 +97,19 @@ const LiveWebinarView = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, username, userToken, webinar.id, webinar.title]);
 
+  useEffect(() => {
+    if (chatClient && channel) {
+      channel.on((event: any) => {
+        if (event.type === "open_cta_dialog" && !isHost) {
+          setDialogOpen(true);
+        }
+        if (event.type === "start_live") {
+          window.location.reload();
+        }
+      });
+    }
+  }, [chatClient, channel, isHost]);
+
   if (!chatClient || !channel) return null;
 
   return (
@@ -199,7 +212,9 @@ const LiveWebinarView = ({
                   <span>Chat</span>
                   <span className="text-xs bg-muted px-2 py-0.5 rounded-full">{viewerCount} viewers</span>
                 </div>
+
                 <MessageList />
+
                 <div className="p-2 border-t border-border">
                   <MessageInput />
                 </div>
@@ -208,6 +223,10 @@ const LiveWebinarView = ({
           </Chat>
         )}
       </div>
+
+      {dialogOpen && (
+        <CTADialogBox open={dialogOpen} onOpenChange={setDialogOpen} webinar={webinar} userId={userId} />
+      )}
 
       {obsDialogBox && (
         <ObsDialogBox

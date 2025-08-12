@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-
+import { useEffect, useState } from "react";
 import { Users, MessageSquare } from "lucide-react";
 import {
   ParticipantView,
@@ -8,8 +8,10 @@ import {
   type Call,
 } from "@stream-io/video-react-sdk";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
 import type { WebinarWithPresenter } from "@/lib/type";
+import { Chat, Channel, MessageList, MessageInput } from "stream-chat-react";
+import "stream-chat-react/dist/css/v2/index.css";
+import { StreamChat } from "stream-chat";
 
 type Props = {
   showChat: boolean;
@@ -36,6 +38,45 @@ const LiveWebinarView = ({
   const participants = useParticipants();
   const hostParticipant = participants.length > 0 ? participants[0] : null;
   const viewerCount = useParticipantCount();
+
+  const [chatClient, setChatClient] = useState<StreamChat | null>(null);
+  const [channel, setChannel] = useState<any>(null);
+
+  useEffect(() => {
+    const initChat = async () => {
+      const client = StreamChat.getInstance(process.env.NEXT_PUBLIC_STREAM_API_KEY!);
+
+      await client.connectUser(
+        {
+          id: userId,
+          name: username,
+        },
+        userToken
+      );
+
+      const ch = client.channel("livestream", webinar.id, {
+        name: webinar.title,
+      });
+
+      await ch.watch();
+
+      setChatClient(client);
+      setChannel(ch);
+    };
+
+    initChat();
+
+    return () => {
+      if (chatClient) {
+        chatClient.disconnectUser();
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, username, userToken, webinar.id, webinar.title]);
+
+  if (!chatClient || !channel) {
+    // still show video area while chat connects
+  }
 
   return (
     <div className="flex flex-col w-full h-screen max-h-screen overflow-hidden bg-background text-foreground">
@@ -82,12 +123,6 @@ const LiveWebinarView = ({
                 <p>Waiting for stream to start...</p>
               </div>
             )}
-
-            {isHost && (
-              <div className="absolute top-4 right-4 bg-background/80 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-medium">
-                Host
-              </div>
-            )}
           </div>
 
           <div className="p-2 border-t border-border flex items-center justify-between py-2">
@@ -97,7 +132,26 @@ const LiveWebinarView = ({
           </div>
         </div>
 
-        {/* Chat panel comes in next commits */}
+        {showChat && chatClient && channel && (
+          <Chat client={chatClient}>
+            <Channel channel={channel}>
+              <div className="w-72 bg-card border border-border rounded-lg overflow-hidden flex flex-col">
+                <div className="py-2 text-primary px-3 border-b border-border font-medium flex items-center justify-between">
+                  <span>Chat</span>
+                  <span className="text-xs bg-muted px-2 py-0.5 rounded-full">
+                    {viewerCount} viewers
+                  </span>
+                </div>
+
+                <MessageList />
+
+                <div className="p-2 border-t border-border">
+                  <MessageInput />
+                </div>
+              </div>
+            </Channel>
+          </Chat>
+        )}
       </div>
     </div>
   );

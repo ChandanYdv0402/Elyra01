@@ -9,7 +9,7 @@ import {
 import { User } from "@prisma/client";
 import { WebinarWithPresenter } from "@/lib/type";
 import CustomLivestreamPlayer from "./CustomLiveStreamPlayer";
-import { getTokenForHost } from "@/action/streamIo";
+import { getTokenForHost } from "@/actions/streamIo";
 
 type Props = {
   apiKey: string;

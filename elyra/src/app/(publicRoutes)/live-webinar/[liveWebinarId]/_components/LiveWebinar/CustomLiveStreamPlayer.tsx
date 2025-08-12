@@ -20,9 +20,18 @@ const CustomLivestreamPlayer = ({ callId, webinar, callType, username, token }: 
 
   useEffect(() => {
     if (!client) return;
+
     const myCall = client.call(callType, callId);
     setCall(myCall);
-    myCall.join({ create: true }).catch(() => console.error("Failed to join the call"));
+
+    myCall.join({ create: true }).then(
+      () => setCall(myCall),
+      () => console.error("Failed to join the call")
+    );
+
+    return () => {
+      setCall(undefined);
+    };
   }, [client, callId, callType]);
 
   if (!call) return null;

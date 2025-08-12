@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import {
+  StreamVideo,
   StreamVideoClient,
   User as StreamUser,
 } from "@stream-io/video-react-sdk";
 import { User } from "@prisma/client";
 import { WebinarWithPresenter } from "@/lib/type";
+import CustomLivestreamPlayer from "./CustomLiveStreamPlayer";
 import { getTokenForHost } from "@/action/stremIo";
 
 type Props = {
@@ -51,7 +53,19 @@ const LiveStreamState = ({ apiKey, callId, webinar, user }: Props) => {
     init();
   }, [apiKey, webinar]);
 
-  return null;
+  if (!client || !hostToken) return null;
+
+  return (
+    <StreamVideo client={client}>
+      <CustomLivestreamPlayer
+        callId={callId}
+        callType="livestream"
+        webinar={webinar}
+        username={user.name}
+        token={hostToken}
+      />
+    </StreamVideo>
+  );
 };
 
 export default LiveStreamState;

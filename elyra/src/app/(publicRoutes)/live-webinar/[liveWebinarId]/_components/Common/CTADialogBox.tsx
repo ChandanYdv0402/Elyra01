@@ -1,8 +1,13 @@
 "use client"
 import type React from "react"
+import { ChevronRight, Loader2 } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { useRouter } from "next/navigation"
+import { createCheckoutLink } from "@/action/stripe"
+import { toast } from "sonner"
 import type { WebinarWithPresenter } from "@/lib/type"
+import { useState } from "react"
 
 type Props = {
   open?: boolean
@@ -12,7 +17,39 @@ type Props = {
   userId: string
 }
 
-const CTADialogBox = ({ open, onOpenChange, trigger, webinar }: Props) => {
+const CTADialogBox = ({ open, onOpenChange, trigger, webinar, userId }: Props) => {
+  const router = useRouter()
+  const [loading, setLoading] = useState(false)
+
+  const handleClick = async () => {
+    setLoading(true)
+    try {
+      if (webinar.ctaType === "BOOK_A_CALL") {
+        router.push(`/live-webinar/${webinar.id}/call?attendeeId=${userId}`)
+      } else {
+        if (!webinar.priceId || !webinar.presenter.stripeConnectId) {
+          return toast.error("No priceId or stripeConnectId found")
+        }
+        const session = await createCheckoutLink(
+          webinar.priceId,
+          webinar.presenter.stripeConnectId,
+          userId,
+          webinar.id,
+          true
+        )
+        if (!session.sessionUrl) {
+          throw new Error("Session URL not found in response")
+        }
+        window.open(session.sessionUrl, "_blank")
+      }
+    } catch (error) {
+      console.error("Error creating checkout link", error)
+      toast.error("Error creating checkout link")
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
@@ -32,7 +69,19 @@ const CTADialogBox = ({ open, onOpenChange, trigger, webinar }: Props) => {
           <Button variant="outline" className="text-muted-foreground">
             Cancel
           </Button>
-          <Button>Continue</Button>
+          <Button onClick={handleClick} disabled={loading} className="flex items-center">
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Loading...
+              </>
+            ) : webinar?.ctaType === "BOOK_A_CALL" ? (
+              "Join Break-room"
+            ) : (
+              "Buy Now"
+            )}
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

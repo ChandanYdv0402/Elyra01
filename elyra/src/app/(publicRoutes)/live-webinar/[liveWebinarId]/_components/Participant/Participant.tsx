@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import {
+  StreamCall,
+  StreamVideo,
   StreamVideoClient,
   type User,
   type Call,
@@ -11,6 +13,7 @@ import { useAttendeeStore } from "@/store/useAttendeeStore";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { getStreamIoToken } from "@/action/stremIo";
+import LiveWebinarView from "../Common/LiveWebinarView";
 import type { WebinarWithPresenter } from "@/lib/type";
 
 type ParticipantProps = {
@@ -21,6 +24,7 @@ type ParticipantProps = {
 
 const Participant = ({ apiKey, webinar, callId }: ParticipantProps) => {
   const { attendee } = useAttendeeStore();
+  const [showChat, setShowChat] = useState<boolean>(true);
   const [client, setClient] = useState<StreamVideoClient | null>(null);
   const [call, setCall] = useState<Call | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -76,7 +80,22 @@ const Participant = ({ apiKey, webinar, callId }: ParticipantProps) => {
     );
   }
 
-  return <div className="h-screen w-full">Connected</div>;
+  return (
+    <StreamVideo client={client}>
+      <StreamCall call={call}>
+        <LiveWebinarView
+          showChat={showChat}
+          setShowChat={setShowChat}
+          webinar={webinar}
+          isHost={false}
+          username={attendee?.name}
+          userId={attendee?.id}
+          userToken={token}
+          call={call}
+        />
+      </StreamCall>
+    </StreamVideo>
+  );
 };
 
 export default Participant;

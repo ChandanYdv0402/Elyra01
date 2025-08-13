@@ -36,11 +36,12 @@ const CTADialogBox = ({ open, onOpenChange, trigger, webinar, userId }: Props) =
           webinar.presenter.stripeConnectId,
           userId,
           webinar.id,
-          true
+          true,
         )
         if (!session.sessionUrl) {
           throw new Error("Session ID not found in response")
         }
+
         window.open(session.sessionUrl, "_blank")
       }
     } catch (error) {
@@ -107,11 +108,7 @@ const CTADialogBox = ({ open, onOpenChange, trigger, webinar, userId }: Props) =
         </div>
 
         <DialogFooter className="flex justify-between items-center mt-4 sm:mt-0">
-          <Button
-            variant="outline"
-            className="text-muted-foreground"
-            onClick={() => onOpenChange?.(false)}
-          >
+          <Button variant="outline" className="text-muted-foreground">
             Cancel
           </Button>
           <Button onClick={handleClick} disabled={loading} className="flex items-center">

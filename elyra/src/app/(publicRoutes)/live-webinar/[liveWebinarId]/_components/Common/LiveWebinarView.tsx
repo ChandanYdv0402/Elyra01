@@ -14,7 +14,7 @@ import { useEffect, useState } from "react";
 import { StreamChat } from "stream-chat";
 import CTADialogBox from "./CTADialogBox";
 import type { WebinarWithPresenter } from "@/lib/type";
-import { changeWebinarStatus } from "@/action/webinar";
+import { changeWebinarStatus } from "@/actions/webinar";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import ObsDialogBox from "./ObsDialogBox";

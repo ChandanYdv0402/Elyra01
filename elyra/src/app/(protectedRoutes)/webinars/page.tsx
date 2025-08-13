@@ -2,7 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import HomeIcon from "@/icons/HomeIcon";
 import LeadIcon from "@/icons/LeadIcon";
 import React from "react";
-// import { webinarData } from "./__test__/webinardata";
+import { webinarData } from "./__test__/webinardata";
 import WebinarCard from "./_components/WebinarCard";
 import PageHeader from "@/components/ReusableComponent/PageHeader";
 import { onAuthenticateUser } from "@/actions/auth";

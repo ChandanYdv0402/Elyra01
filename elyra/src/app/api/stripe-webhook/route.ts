@@ -46,7 +46,6 @@ export async function POST(req: NextRequest) {
         { status: 200 }
       );
     }
-
     switch (stripeEvent.type) {
       case "checkout.session.completed":
       await changeAttendanceType(event?.metadata?.attendeeId, event?.metadata?.webinarId, "CONVERTED"); 

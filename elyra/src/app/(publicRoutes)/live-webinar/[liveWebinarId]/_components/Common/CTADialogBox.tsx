@@ -1,6 +1,6 @@
 "use client"
 import type React from "react"
-import { ChevronRight, Loader2 } from "lucide-react"
+import { ChevronRight, Copy, Loader2 } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
@@ -20,6 +20,7 @@ type Props = {
 const CTADialogBox = ({ open, onOpenChange, trigger, webinar, userId }: Props) => {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   const handleClick = async () => {
     setLoading(true)
@@ -50,6 +51,15 @@ const CTADialogBox = ({ open, onOpenChange, trigger, webinar, userId }: Props) =
     }
   }
 
+  const copyToClipboard = () => {
+    if (webinar.couponCode) {
+      navigator.clipboard.writeText(webinar.couponCode)
+      setCopied(true)
+      toast.success("Coupon code copied to clipboard")
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
@@ -60,12 +70,30 @@ const CTADialogBox = ({ open, onOpenChange, trigger, webinar, userId }: Props) =
           </DialogTitle>
           <p className="text-sm text-muted-foreground mt-1">
             {webinar?.ctaType === "BOOK_A_CALL"
-              ? "You will be redirected to a call on another page"
+              ? "You will be redirected to a call on another page "
               : "You will be redirected to checkout"}
           </p>
         </DialogHeader>
 
-        <DialogFooter className="flex justify-between items-center">
+        {webinar.couponCode && (
+          <div className="mt-3">
+            <div className="text-xs text-muted-foreground mb-1">Coupon Code:</div>
+            <div className="flex items-center">
+              <div className="bg-primary/10 border border-dashed border-primary/50 rounded-l-md px-3 py-1.5 text-sm font-mono font-semibold text-primary">
+                {webinar.couponCode}
+              </div>
+              <button
+                onClick={copyToClipboard}
+                className="bg-primary/5 hover:bg-primary/10 border border-l-0 border-dashed border-primary/50 rounded-r-md p-1.5 text-primary transition-colors"
+                aria-label="Copy coupon code"
+              >
+                <Copy className={`h-4 w-4 ${copied ? "text-green-500" : ""}`} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        <DialogFooter className="flex justify-between items-center mt-4 sm:mt-0">
           <Button variant="outline" className="text-muted-foreground">
             Cancel
           </Button>

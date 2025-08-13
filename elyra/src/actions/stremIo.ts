@@ -1,7 +1,7 @@
 "use server";
 
 import { getStreamClient } from "@/lib/stream/streamVideoClient";
-import { Attendee } from "@prisma/client";
+import { Attendee, Webinar } from "@prisma/client";
 import { UserRequest } from "@stream-io/node-sdk";
 
 export const getStreamIoToken = async (attendee: Attendee | null) => {
@@ -12,19 +12,39 @@ export const getStreamIoToken = async (attendee: Attendee | null) => {
       name: attendee?.name || "Guest",
       image: `https://api.dicebear.com/7.x/initials/svg?seed=${attendee?.name || "Guest"}`,
     };
-
     await getStreamClient.upsertUsers([newUser]);
 
-    // Valid for ~60 hours
     const validity = 60 * 60 * 60;
     const token = getStreamClient.generateUserToken({
       user_id: attendee?.id || "guest",
       validity_in_seconds: validity,
     });
-
     return token;
   } catch (error) {
     console.error("Error generating Stream Io token:", error);
     throw new Error("Failed to generate Stream Io token");
+  }
+};
+
+export const createAndStartStream = async (webinar: Webinar) => {
+  try {
+    const call = getStreamClient.video.call("livestream", webinar.id);
+
+    await call.getOrCreate({
+      data: {
+        created_by_id: webinar.presenterId,
+        members: [{ user_id: webinar.presenterId, role: "host" }],
+      },
+    });
+
+    await call.goLive({
+      start_recording: true,
+      recording_storage_name: "livestream",
+    });
+
+    console.log("Stream started successfully:", call);
+  } catch (error) {
+    console.error("Error creating and starting stream:", error);
+    throw new Error("Failed to create and start stream");
   }
 };

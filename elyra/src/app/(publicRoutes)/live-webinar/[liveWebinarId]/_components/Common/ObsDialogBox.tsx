@@ -2,11 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -22,19 +18,33 @@ type Props = {
 
 const ObsDialogBox = ({ open, onOpenChange, rtmpURL, streamKey }: Props) => {
   const urlRef = useRef<HTMLInputElement>(null);
+  const taRef = useRef<HTMLTextAreaElement>(null);
   const [revealed, setRevealed] = useState(false);
 
-  useEffect(() => {
-    if (open) urlRef.current?.focus();
-  }, [open]);
+  useEffect(() => { if (open) urlRef.current?.focus(); }, [open]);
 
-  const copyToClipboard = async (text: string, label: string) => {
+  const copyWithFallback = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      toast.success(`${label} copied to clipboard`);
+      return true;
     } catch {
-      toast.error(`Failed to copy ${label}`);
+      try {
+        const el = taRef.current;
+        if (!el) return false;
+        el.value = text;
+        el.select();
+        const ok = document.execCommand("copy");
+        el.blur();
+        return ok;
+      } catch {
+        return false;
+      }
     }
+  };
+
+  const handleCopy = async (text: string, label: string) => {
+    const ok = await copyWithFallback(text);
+    ok ? toast.success(`${label} copied`) : toast.error(`Failed to copy ${label}`);
   };
 
   return (
@@ -47,12 +57,14 @@ const ObsDialogBox = ({ open, onOpenChange, rtmpURL, streamKey }: Props) => {
           </DialogDescription>
         </DialogHeader>
 
+        <textarea ref={taRef} className="sr-only absolute -left-[9999px]" aria-hidden />
+
         <div className="space-y-4 py-4">
           <div>
             <label className="text-sm font-medium" htmlFor="rtmp-url">RTMP URL</label>
             <div className="flex mt-1">
               <Input id="rtmp-url" ref={urlRef} value={rtmpURL} readOnly className="flex-1" />
-              <Button variant="outline" size="icon" className="ml-2" onClick={() => copyToClipboard(rtmpURL, "RTMP URL")}>
+              <Button variant="outline" size="icon" className="ml-2" onClick={() => handleCopy(rtmpURL, "RTMP URL")}>
                 <Copy size={16} />
               </Button>
             </div>
@@ -62,20 +74,14 @@ const ObsDialogBox = ({ open, onOpenChange, rtmpURL, streamKey }: Props) => {
             <label className="text-sm font-medium" htmlFor="stream-key">Stream Key</label>
             <div className="flex mt-1">
               <Input id="stream-key" value={streamKey} readOnly type={revealed ? "text" : "password"} className="flex-1" />
-              <Button
-                variant="outline"
-                size="icon"
-                className="ml-2"
-                aria-label={revealed ? "Hide key" : "Show key"}
-                onClick={() => setRevealed(v => !v)}
-              >
+              <Button variant="outline" size="icon" className="ml-2" aria-label={revealed ? "Hide key" : "Show key"} onClick={() => setRevealed(v => !v)}>
                 {revealed ? <EyeOff size={16} /> : <Eye size={16} />}
               </Button>
-              <Button variant="outline" size="icon" className="ml-2" onClick={() => copyToClipboard(streamKey, "Stream Key")}>
+              <Button variant="outline" size="icon" className="ml-2" onClick={() => handleCopy(streamKey, "Stream Key")}>
                 <Copy size={16} />
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Reveal only when needed.</p>
+            <p className="text-xs text-muted-foreground mt-1">Fallback copy supported when Clipboard API is blocked.</p>
           </div>
         </div>
       </DialogContent>

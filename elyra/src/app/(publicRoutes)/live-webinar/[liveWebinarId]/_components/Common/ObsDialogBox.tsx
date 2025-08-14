@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Copy } from "lucide-react";
+import { Copy, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
 type Props = {
@@ -22,6 +22,7 @@ type Props = {
 
 const ObsDialogBox = ({ open, onOpenChange, rtmpURL, streamKey }: Props) => {
   const urlRef = useRef<HTMLInputElement>(null);
+  const [revealed, setRevealed] = useState(false);
 
   useEffect(() => {
     if (open) urlRef.current?.focus();
@@ -47,43 +48,34 @@ const ObsDialogBox = ({ open, onOpenChange, rtmpURL, streamKey }: Props) => {
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium" htmlFor="rtmp-url">
-              RTMP URL
-            </label>
-            <div className="flex">
+          <div>
+            <label className="text-sm font-medium" htmlFor="rtmp-url">RTMP URL</label>
+            <div className="flex mt-1">
               <Input id="rtmp-url" ref={urlRef} value={rtmpURL} readOnly className="flex-1" />
-              <Button
-                aria-label="Copy RTMP URL"
-                variant="outline"
-                size="icon"
-                className="ml-2"
-                onClick={() => copyToClipboard(rtmpURL, "RTMP URL")}
-              >
+              <Button variant="outline" size="icon" className="ml-2" onClick={() => copyToClipboard(rtmpURL, "RTMP URL")}>
                 <Copy size={16} />
               </Button>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium" htmlFor="stream-key">
-              Stream Key
-            </label>
-            <div className="flex">
-              <Input id="stream-key" value={streamKey} readOnly type="password" className="flex-1" />
+          <div>
+            <label className="text-sm font-medium" htmlFor="stream-key">Stream Key</label>
+            <div className="flex mt-1">
+              <Input id="stream-key" value={streamKey} readOnly type={revealed ? "text" : "password"} className="flex-1" />
               <Button
-                aria-label="Copy Stream Key"
                 variant="outline"
                 size="icon"
                 className="ml-2"
-                onClick={() => copyToClipboard(streamKey, "Stream Key")}
+                aria-label={revealed ? "Hide key" : "Show key"}
+                onClick={() => setRevealed(v => !v)}
               >
+                {revealed ? <EyeOff size={16} /> : <Eye size={16} />}
+              </Button>
+              <Button variant="outline" size="icon" className="ml-2" onClick={() => copyToClipboard(streamKey, "Stream Key")}>
                 <Copy size={16} />
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Keep your stream key private. Never share it with others.
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">Reveal only when needed.</p>
           </div>
         </div>
       </DialogContent>

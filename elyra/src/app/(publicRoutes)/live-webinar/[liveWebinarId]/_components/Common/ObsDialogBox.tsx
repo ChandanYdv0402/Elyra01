@@ -24,27 +24,25 @@ const ObsDialogBox = ({ open, onOpenChange, rtmpURL, streamKey }: Props) => {
   useEffect(() => { if (open) urlRef.current?.focus(); }, [open]);
 
   const copyWithFallback = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      return true;
-    } catch {
+    try { await navigator.clipboard.writeText(text); return true; }
+    catch {
       try {
-        const el = taRef.current;
-        if (!el) return false;
-        el.value = text;
-        el.select();
-        const ok = document.execCommand("copy");
-        el.blur();
+        const el = taRef.current; if (!el) return false;
+        el.value = text; el.select();
+        const ok = document.execCommand("copy"); el.blur();
         return ok;
-      } catch {
-        return false;
-      }
+      } catch { return false; }
     }
   };
 
   const handleCopy = async (text: string, label: string) => {
     const ok = await copyWithFallback(text);
     ok ? toast.success(`${label} copied`) : toast.error(`Failed to copy ${label}`);
+  };
+
+  const copyJSON = async () => {
+    const payload = JSON.stringify({ rtmpURL, streamKey }, null, 2);
+    await handleCopy(payload, "Credentials JSON");
   };
 
   return (
@@ -81,8 +79,11 @@ const ObsDialogBox = ({ open, onOpenChange, rtmpURL, streamKey }: Props) => {
                 <Copy size={16} />
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Fallback copy supported when Clipboard API is blocked.</p>
           </div>
+
+          <Button className="w-full" onClick={copyJSON}>
+            <Copy className="h-4 w-4 mr-2" /> Copy Both as JSON
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

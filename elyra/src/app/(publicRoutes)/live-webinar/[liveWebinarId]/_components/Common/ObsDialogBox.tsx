@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Copy, Eye, EyeOff, Keyboard } from "lucide-react";
+import { Copy, Eye, EyeOff, Keyboard, CheckCircle2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 type Props = {
@@ -14,6 +14,16 @@ type Props = {
   onOpenChange: (open: boolean) => void;
   rtmpURL: string;
   streamKey: string;
+};
+
+const isValidRtmp = (url: string) => {
+  try {
+    const httpsLike = url.replace(/^rtmps?:\/\//, "https://");
+    const u = new URL(httpsLike);
+    return !!u.host && /stream|ingress|rtmp|video/i.test(u.host);
+  } catch {
+    return false;
+  }
 };
 
 const ObsDialogBox = ({ open, onOpenChange, rtmpURL, streamKey }: Props) => {
@@ -52,6 +62,8 @@ const ObsDialogBox = ({ open, onOpenChange, rtmpURL, streamKey }: Props) => {
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onOpenChange, rtmpURL, streamKey]);
 
+  const validRtmp = useMemo(() => isValidRtmp(rtmpURL), [rtmpURL]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent aria-describedby="obs-credentials-description">
@@ -71,13 +83,29 @@ const ObsDialogBox = ({ open, onOpenChange, rtmpURL, streamKey }: Props) => {
 
         <div className="space-y-4 py-4">
           <div>
-            <label className="text-sm font-medium" htmlFor="rtmp-url">RTMP URL</label>
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium" htmlFor="rtmp-url">RTMP URL</label>
+              {validRtmp ? (
+                <span className="inline-flex items-center text-emerald-500 text-xs">
+                  <CheckCircle2 className="mr-1 h-4 w-4" /> Looks valid
+                </span>
+              ) : (
+                <span className="inline-flex items-center text-amber-500 text-xs">
+                  <AlertTriangle className="mr-1 h-4 w-4" /> Unusual URL
+                </span>
+              )}
+            </div>
             <div className="flex mt-1">
-              <Input id="rtmp-url" ref={urlRef} value={rtmpURL} readOnly className="flex-1" />
+              <Input id="rtmp-url" ref={urlRef} value={rtmpURL} readOnly className="flex-1" aria-invalid={!validRtmp} />
               <Button variant="outline" size="icon" className="ml-2" onClick={() => handleCopy(rtmpURL, "RTMP URL")}>
                 <Copy size={16} />
               </Button>
             </div>
+            {!validRtmp && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Verify your RTMP server host/path with your streaming provider.
+              </p>
+            )}
           </div>
 
           <div>

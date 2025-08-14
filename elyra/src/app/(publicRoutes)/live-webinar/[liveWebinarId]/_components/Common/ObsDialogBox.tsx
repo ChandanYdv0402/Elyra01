@@ -6,7 +6,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Copy, Eye, EyeOff, Keyboard, CheckCircle2, AlertTriangle } from "lucide-react";
+import {
+  Copy, Eye, EyeOff, Keyboard, CheckCircle2, AlertTriangle, FileDown,
+} from "lucide-react";
 import { toast } from "sonner";
 
 type Props = {
@@ -18,12 +20,9 @@ type Props = {
 
 const isValidRtmp = (url: string) => {
   try {
-    const httpsLike = url.replace(/^rtmps?:\/\//, "https://");
-    const u = new URL(httpsLike);
+    const u = new URL(url.replace(/^rtmps?:\/\//, "https://"));
     return !!u.host && /stream|ingress|rtmp|video/i.test(u.host);
-  } catch {
-    return false;
-  }
+  } catch { return false; }
 };
 
 const ObsDialogBox = ({ open, onOpenChange, rtmpURL, streamKey }: Props) => {
@@ -64,6 +63,20 @@ const ObsDialogBox = ({ open, onOpenChange, rtmpURL, streamKey }: Props) => {
 
   const validRtmp = useMemo(() => isValidRtmp(rtmpURL), [rtmpURL]);
 
+  const downloadEnv = () => {
+    const content = `# OBS/encoder credentials
+RTMP_URL="${rtmpURL}"
+STREAM_KEY="${streamKey}"
+`;
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "stream.env";
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast.success(".env snippet downloaded");
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent aria-describedby="obs-credentials-description">
@@ -101,11 +114,6 @@ const ObsDialogBox = ({ open, onOpenChange, rtmpURL, streamKey }: Props) => {
                 <Copy size={16} />
               </Button>
             </div>
-            {!validRtmp && (
-              <p className="text-xs text-muted-foreground mt-1">
-                Verify your RTMP server host/path with your streaming provider.
-              </p>
-            )}
           </div>
 
           <div>
@@ -120,6 +128,10 @@ const ObsDialogBox = ({ open, onOpenChange, rtmpURL, streamKey }: Props) => {
               </Button>
             </div>
           </div>
+
+          <Button onClick={downloadEnv} className="w-full">
+            <FileDown className="mr-2 h-4 w-4" /> Download .env Snippet
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

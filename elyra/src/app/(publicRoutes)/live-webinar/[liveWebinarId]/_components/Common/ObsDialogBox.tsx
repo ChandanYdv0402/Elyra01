@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Copy, Eye, EyeOff } from "lucide-react";
+import { Copy, Eye, EyeOff, Keyboard } from "lucide-react";
 import { toast } from "sonner";
 
 type Props = {
@@ -40,16 +40,28 @@ const ObsDialogBox = ({ open, onOpenChange, rtmpURL, streamKey }: Props) => {
     ok ? toast.success(`${label} copied`) : toast.error(`Failed to copy ${label}`);
   };
 
-  const copyJSON = async () => {
-    const payload = JSON.stringify({ rtmpURL, streamKey }, null, 2);
-    await handleCopy(payload, "Credentials JSON");
-  };
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!open) return;
+      const meta = e.metaKey || e.ctrlKey;
+      if (e.key === "Escape") onOpenChange(false);
+      if (meta && e.key.toLowerCase() === "c") { e.preventDefault(); handleCopy(rtmpURL, "RTMP URL"); }
+      if (meta && e.key.toLowerCase() === "k") { e.preventDefault(); handleCopy(streamKey, "Stream Key"); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onOpenChange, rtmpURL, streamKey]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent aria-describedby="obs-credentials-description">
         <DialogHeader>
-          <DialogTitle>OBS Streaming Credentials</DialogTitle>
+          <DialogTitle className="flex items-center">
+            OBS Streaming Credentials
+            <span className="ml-2 inline-flex items-center text-xs text-muted-foreground">
+              <Keyboard className="h-4 w-4 mr-1" /> Esc • ⌘/Ctrl+C • ⌘/Ctrl+K
+            </span>
+          </DialogTitle>
           <DialogDescription id="obs-credentials-description">
             Use these values to configure your encoder. Keep your stream key secret.
           </DialogDescription>
@@ -80,10 +92,6 @@ const ObsDialogBox = ({ open, onOpenChange, rtmpURL, streamKey }: Props) => {
               </Button>
             </div>
           </div>
-
-          <Button className="w-full" onClick={copyJSON}>
-            <Copy className="h-4 w-4 mr-2" /> Copy Both as JSON
-          </Button>
         </div>
       </DialogContent>
     </Dialog>

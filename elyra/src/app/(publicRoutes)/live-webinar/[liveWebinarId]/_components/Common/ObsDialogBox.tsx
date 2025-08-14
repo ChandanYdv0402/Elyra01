@@ -7,7 +7,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
-  Copy, Eye, EyeOff, Keyboard, CheckCircle2, AlertTriangle, FileDown,
+  Copy, Eye, EyeOff, Keyboard, CheckCircle2, AlertTriangle, FileDown, KeyRound, Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -16,6 +16,7 @@ type Props = {
   onOpenChange: (open: boolean) => void;
   rtmpURL: string;
   streamKey: string;
+  onRegenerate?: () => Promise<string>; // optional server action to regenerate key
 };
 
 const isValidRtmp = (url: string) => {
@@ -25,12 +26,15 @@ const isValidRtmp = (url: string) => {
   } catch { return false; }
 };
 
-const ObsDialogBox = ({ open, onOpenChange, rtmpURL, streamKey }: Props) => {
+const ObsDialogBox = ({ open, onOpenChange, rtmpURL, streamKey, onRegenerate }: Props) => {
   const urlRef = useRef<HTMLInputElement>(null);
   const taRef = useRef<HTMLTextAreaElement>(null);
   const [revealed, setRevealed] = useState(false);
+  const [currentKey, setCurrentKey] = useState(streamKey);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => { if (open) urlRef.current?.focus(); }, [open]);
+  useEffect(() => { setCurrentKey(streamKey); }, [streamKey]);
 
   const copyWithFallback = async (text: string) => {
     try { await navigator.clipboard.writeText(text); return true; }
@@ -55,18 +59,18 @@ const ObsDialogBox = ({ open, onOpenChange, rtmpURL, streamKey }: Props) => {
       const meta = e.metaKey || e.ctrlKey;
       if (e.key === "Escape") onOpenChange(false);
       if (meta && e.key.toLowerCase() === "c") { e.preventDefault(); handleCopy(rtmpURL, "RTMP URL"); }
-      if (meta && e.key.toLowerCase() === "k") { e.preventDefault(); handleCopy(streamKey, "Stream Key"); }
+      if (meta && e.key.toLowerCase() === "k") { e.preventDefault(); handleCopy(currentKey, "Stream Key"); }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, onOpenChange, rtmpURL, streamKey]);
+  }, [open, onOpenChange, rtmpURL, currentKey]);
 
   const validRtmp = useMemo(() => isValidRtmp(rtmpURL), [rtmpURL]);
 
   const downloadEnv = () => {
     const content = `# OBS/encoder credentials
 RTMP_URL="${rtmpURL}"
-STREAM_KEY="${streamKey}"
+STREAM_KEY="${currentKey}"
 `;
     const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
     const a = document.createElement("a");
@@ -75,6 +79,21 @@ STREAM_KEY="${streamKey}"
     a.click();
     URL.revokeObjectURL(a.href);
     toast.success(".env snippet downloaded");
+  };
+
+  const handleRegenerate = async () => {
+    if (!onRegenerate) return toast.error("Regeneration not available");
+    if (!confirm("Regenerate stream key? The old key will stop working immediately.")) return;
+    setBusy(true);
+    try {
+      const newKey = await onRegenerate();
+      setCurrentKey(newKey);
+      toast.success("Stream key regenerated");
+    } catch {
+      toast.error("Failed to regenerate key");
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -119,14 +138,20 @@ STREAM_KEY="${streamKey}"
           <div>
             <label className="text-sm font-medium" htmlFor="stream-key">Stream Key</label>
             <div className="flex mt-1">
-              <Input id="stream-key" value={streamKey} readOnly type={revealed ? "text" : "password"} className="flex-1" />
+              <Input id="stream-key" value={currentKey} readOnly type={revealed ? "text" : "password"} className="flex-1" />
               <Button variant="outline" size="icon" className="ml-2" aria-label={revealed ? "Hide key" : "Show key"} onClick={() => setRevealed(v => !v)}>
                 {revealed ? <EyeOff size={16} /> : <Eye size={16} />}
               </Button>
-              <Button variant="outline" size="icon" className="ml-2" onClick={() => handleCopy(streamKey, "Stream Key")}>
+              <Button variant="outline" size="icon" className="ml-2" onClick={() => handleCopy(currentKey, "Stream Key")}>
                 <Copy size={16} />
               </Button>
+              <Button variant="outline" className="ml-2" onClick={handleRegenerate} disabled={busy}>
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4 mr-2" />} Regenerate
+              </Button>
             </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Regenerating invalidates the old key immediately.
+            </p>
           </div>
 
           <Button onClick={downloadEnv} className="w-full">

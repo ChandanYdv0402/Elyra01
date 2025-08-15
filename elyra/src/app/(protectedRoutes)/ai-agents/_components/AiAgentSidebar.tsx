@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { memo, useMemo, useState, useCallback } from "react";
 import { Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,26 @@ type Props = {
   userId: string;
 };
 
+type ItemProps = {
+  item: AiAgents;
+  selectedId?: string;
+  onSelect: (a: AiAgents) => void;
+};
+
+const AssistantItem = memo(({ item, selectedId, onSelect }: ItemProps) => {
+  const selected = item.id === selectedId;
+  return (
+    <button
+      className={`w-full text-left p-4 ${selected ? "bg-primary/10" : ""} hover:bg-primary/20`}
+      onClick={() => onSelect(item)}
+      aria-current={selected ? "true" : "false"}
+    >
+      <div className="font-medium truncate">{item.name}</div>
+    </button>
+  );
+});
+AssistantItem.displayName = "AssistantItem";
+
 const AiAgentSidebar = ({ aiAgents = [], userId }: Props) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -25,7 +45,7 @@ const AiAgentSidebar = ({ aiAgents = [], userId }: Props) => {
     return aiAgents.filter((a) => a.name.toLowerCase().includes(q));
   }, [aiAgents, query]);
 
-  const list = filtered;
+  const onSelect = useCallback((a: AiAgents) => setAssistant(a), [setAssistant]);
 
   return (
     <div className="w-[300px] border-r border-border flex flex-col">
@@ -54,19 +74,11 @@ const AiAgentSidebar = ({ aiAgents = [], userId }: Props) => {
             </button>
             .
           </div>
-        ) : list.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <div className="p-4 text-sm text-muted-foreground">No assistants match “{query}”.</div>
         ) : (
-          list.map((a) => (
-            <button
-              key={a.id}
-              className={`w-full text-left p-4 ${
-                a.id === assistant?.id ? "bg-primary/10" : ""
-              } hover:bg-primary/20`}
-              onClick={() => setAssistant(a)}
-            >
-              <div className="font-medium truncate">{a.name}</div>
-            </button>
+          filtered.map((a) => (
+            <AssistantItem key={a.id} item={a} selectedId={assistant?.id} onSelect={onSelect} />
           ))
         )}
       </ScrollArea>

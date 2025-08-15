@@ -13,6 +13,18 @@ const buildFirstMessage = (name: string) =>
 
 const sanitize = (s: string) => s?.trim();
 
+const normalizeError = (err: unknown) => {
+  const e = err as any;
+  const code: number =
+    e?.statusCode ?? e?.response?.status ?? e?.status ?? 500;
+  const message: string =
+    e?.message ??
+    e?.response?.data?.error ??
+    e?.response?.data?.message ??
+    "Unexpected error";
+  return { code, message };
+};
+
 export const createAssistant = async (rawName: string, rawUserId: string) => {
   try {
     const name = sanitize(rawName);
@@ -52,9 +64,10 @@ export const createAssistant = async (rawName: string, rawUserId: string) => {
     });
 
     return { success: true, status: 200, data: aiAgent };
-  } catch (error: any) {
-    console.error("Error creating agent:", error);
-    return { success: false, status: 500, message: error?.message ?? "Failed to create agent" };
+  } catch (error) {
+    const { code, message } = normalizeError(error);
+    console.error("Error creating agent:", message);
+    return { success: false, status: code, message };
   }
 };
 
@@ -67,25 +80,22 @@ export const updateAssistant = async (
     const firstMessage = sanitize(rawFirstMessage) || "Hello! How can I help you today?";
     const systemPrompt = sanitize(rawSystemPrompt) || aiAgentPrompt;
 
-    // Provider update does not need to wait for DB update.
-    const providerUpdate = vapiServer.assistants.update(assistantId, {
-      firstMessage,
-      model: {
-        model: FALLBACK_MODEL,
-        provider: FALLBACK_PROVIDER,
-        messages: [{ role: "system", content: systemPrompt }],
-      },
-      serverMessages: [],
-    });
+    const [external, updated] = await Promise.all([
+      vapiServer.assistants.update(assistantId, {
+        firstMessage,
+        model: {
+          model: FALLBACK_MODEL,
+          provider: FALLBACK_PROVIDER,
+          messages: [{ role: "system", content: systemPrompt }],
+        },
+        serverMessages: [],
+      }),
+      prismaClient.aiAgents.update({
+        where: { id: assistantId },
+        data: { firstMessage, prompt: systemPrompt, model: FALLBACK_MODEL, provider: FALLBACK_PROVIDER },
+      }),
+    ]);
 
-    const dbUpdate = prismaClient.aiAgents.update({
-      where: { id: assistantId },
-      data: { firstMessage, prompt: systemPrompt, model: FALLBACK_MODEL, provider: FALLBACK_PROVIDER },
-    });
-
-    const [external, updated] = await Promise.all([providerUpdate, dbUpdate]);
-
-    // If provider returns specific model/provider, patch DB (best-effort).
     const providerModel = (external as any)?.model?.model;
     const providerName = (external as any)?.model?.provider;
     if (providerModel || providerName) {
@@ -99,8 +109,9 @@ export const updateAssistant = async (
     }
 
     return { success: true, status: 200, data: updated };
-  } catch (error: any) {
-    console.error("Error updating agent:", error);
-    return { success: false, status: 500, message: error?.message ?? "Failed to update agent" };
+  } catch (error) {
+    const { code, message } = normalizeError(error);
+    console.error("Error updating agent:", message);
+    return { success: false, status: code, message };
   }
 };

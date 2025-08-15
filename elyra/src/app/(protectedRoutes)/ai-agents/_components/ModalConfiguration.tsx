@@ -21,13 +21,8 @@ const useDebouncedValue = <T,>(value: T, delay = 300) => {
 };
 
 const RECOMMENDED_MAX = 4000;
-
-const FieldLabel = ({ children }: { children: React.ReactNode }) => (
-  <div className="flex items-center mb-2">
-    <label className="font-medium">{children}</label>
-    <Info className="h-4 w-4 text-neutral-500 ml-2" />
-  </div>
-);
+const PROVIDERS = ["openai", "anthropic", "google", "custom"] as const;
+const MODELS = ["gpt-4o", "gpt-4.1", "claude-3.5-sonnet", "gemini-1.5-pro"] as const;
 
 const ModelConfiguration = () => {
   const { assistant } = useAiAgentStore();
@@ -35,8 +30,13 @@ const ModelConfiguration = () => {
   const [loading, setLoading] = useState(false);
   const [firstMessage, setFirstMessage] = useState("");
   const [systemPrompt, setSystemPrompt] = useState("");
+  const [provider, setProvider] = useState<string>("");
+  const [model, setModel] = useState<string>("");
+
   const [initialFirst, setInitialFirst] = useState("");
   const [initialPrompt, setInitialPrompt] = useState("");
+  const [initialProvider, setInitialProvider] = useState("");
+  const [initialModel, setInitialModel] = useState("");
 
   const debouncedPrompt = useDebouncedValue(systemPrompt, 300);
   const charCount = debouncedPrompt.length;
@@ -46,16 +46,28 @@ const ModelConfiguration = () => {
     if (assistant) {
       const f = assistant?.firstMessage || "";
       const p = assistant?.prompt || "";
+      const prov = assistant?.provider || "openai";
+      const mdl = assistant?.model || "gpt-4o";
+
       setFirstMessage(f);
       setSystemPrompt(p);
+      setProvider(prov);
+      setModel(mdl);
+
       setInitialFirst(f);
       setInitialPrompt(p);
+      setInitialProvider(prov);
+      setInitialModel(mdl);
     }
   }, [assistant]);
 
   const isDirty = useMemo(
-    () => firstMessage !== initialFirst || debouncedPrompt !== initialPrompt,
-    [firstMessage, initialFirst, debouncedPrompt, initialPrompt]
+    () =>
+      firstMessage !== initialFirst ||
+      debouncedPrompt !== initialPrompt ||
+      provider !== initialProvider ||
+      model !== initialModel,
+    [firstMessage, initialFirst, debouncedPrompt, initialPrompt, provider, initialProvider, model, initialModel]
   );
 
   useEffect(() => {
@@ -89,11 +101,16 @@ const ModelConfiguration = () => {
     setLoading(true);
     const tId = toast.loading("Updating assistant...");
     try {
-      const res = await updateAssistant(assistant.id, firstMessage, debouncedPrompt);
+      // NOTE: this assumes your `updateAssistant` action supports provider/model fields.
+      // If not, update the action accordingly or ignore these extra params server-side.
+      const res = await updateAssistant(assistant.id, firstMessage, debouncedPrompt, provider, model);
       if (!res.success) throw new Error(res.message);
       toast.success("Assistant updated successfully", { id: tId });
+
       setInitialFirst(firstMessage);
       setInitialPrompt(debouncedPrompt);
+      setInitialProvider(provider);
+      setInitialModel(model);
     } catch (error: any) {
       const msg =
         error?.response?.data?.message ||
@@ -129,7 +146,10 @@ const ModelConfiguration = () => {
       <p className="text-neutral-400 mb-6">Configure the behavior of the assistant.</p>
 
       <div className="mb-6">
-        <FieldLabel>First Message</FieldLabel>
+        <div className="flex items-center mb-2">
+          <label className="font-medium">First Message</label>
+          <Info className="h-4 w-4 text-neutral-500 ml-2" />
+        </div>
         <Input
           value={firstMessage}
           onChange={(e) => setFirstMessage(e.target.value)}
@@ -156,11 +176,19 @@ const ModelConfiguration = () => {
 
       <div className="grid grid-cols-2 gap-6">
         <ConfigField label="Provider">
-          <DropdownSelect value={assistant?.provider || ""} />
+          <DropdownSelect
+            value={provider}
+            onChange={(val: string) => setProvider(val)}
+            options={PROVIDERS.map((p) => ({ label: p, value: p }))}
+          />
         </ConfigField>
 
         <ConfigField label="Model" showInfo>
-          <DropdownSelect value={assistant?.model || ""} />
+          <DropdownSelect
+            value={model}
+            onChange={(val: string) => setModel(val)}
+            options={MODELS.map((m) => ({ label: m, value: m }))}
+          />
         </ConfigField>
       </div>
     </form>

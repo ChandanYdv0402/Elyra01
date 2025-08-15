@@ -22,6 +22,13 @@ const useDebouncedValue = <T,>(value: T, delay = 300) => {
 
 const RECOMMENDED_MAX = 4000;
 
+const FieldLabel = ({ children }: { children: React.ReactNode }) => (
+  <div className="flex items-center mb-2">
+    <label className="font-medium">{children}</label>
+    <Info className="h-4 w-4 text-neutral-500 ml-2" />
+  </div>
+);
+
 const ModelConfiguration = () => {
   const { assistant } = useAiAgentStore();
 
@@ -83,10 +90,7 @@ const ModelConfiguration = () => {
     const tId = toast.loading("Updating assistant...");
     try {
       const res = await updateAssistant(assistant.id, firstMessage, debouncedPrompt);
-      if (!res.success) {
-        const msg = (res as any)?.error?.message || res.message || "Update failed";
-        throw new Error(msg);
-      }
+      if (!res.success) throw new Error(res.message);
       toast.success("Assistant updated successfully", { id: tId });
       setInitialFirst(firstMessage);
       setInitialPrompt(debouncedPrompt);
@@ -125,10 +129,7 @@ const ModelConfiguration = () => {
       <p className="text-neutral-400 mb-6">Configure the behavior of the assistant.</p>
 
       <div className="mb-6">
-        <div className="flex items-center mb-2">
-          <label className="font-medium">First Message</label>
-          <Info className="h-4 w-4 text-neutral-500 ml-2" />
-        </div>
+        <FieldLabel>First Message</FieldLabel>
         <Input
           value={firstMessage}
           onChange={(e) => setFirstMessage(e.target.value)}

@@ -24,14 +24,13 @@ const CreateAssistantModal = ({ isOpen, onClose, userId }: Props) => {
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  const titleId = "create-assistant-title";
+  const descId = "create-assistant-desc";
 
   useEffect(() => {
     if (!isOpen) return;
     inputRef.current?.focus();
-
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [isOpen, onClose]);
@@ -70,21 +69,36 @@ const CreateAssistantModal = ({ isOpen, onClose, userId }: Props) => {
 
   return (
     <div
+      data-testid="create-assistant-overlay"
       className="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
       onMouseDown={handleBackdrop}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+      aria-describedby={descId}
     >
-      <div className="bg-muted/80 rounded-lg w-full max-w-md p-6 border border-input shadow-xl">
+      <div data-testid="create-assistant-modal" className="bg-muted/80 rounded-lg w-full max-w-md p-6 border border-input shadow-xl">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold">Create Assistant</h2>
-          <button onClick={onClose} className="text-neutral-400 hover:text-white">
+          <h2 id={titleId} className="text-xl font-semibold">
+            Create Assistant
+          </h2>
+          <button data-testid="close-dialog" onClick={onClose} aria-label="Close dialog" className="text-neutral-400 hover:text-white">
             <X className="h-5 w-5" />
           </button>
         </div>
 
+        <p id={descId} className="sr-only">
+          Enter a name and press Create to add a new assistant.
+        </p>
+
         <form onSubmit={handleSubmit} noValidate>
           <div className="mb-2">
-            <label className="block font-medium mb-2">Assistant Name</label>
+            <label className="block font-medium mb-2" htmlFor="assistant-name">
+              Assistant Name
+            </label>
             <Input
+              id="assistant-name"
+              data-testid="assistant-name-input"
               ref={inputRef}
               value={name}
               onChange={(e) => {
@@ -94,15 +108,21 @@ const CreateAssistantModal = ({ isOpen, onClose, userId }: Props) => {
               placeholder="Enter assistant name"
               className="bg-neutral-800 border-neutral-700"
               required
+              aria-invalid={!!err}
+              aria-describedby={err ? "assistant-name-error" : undefined}
             />
-            {err && <p className="text-xs text-red-400 mt-2">{err}</p>}
+            {err && (
+              <p id="assistant-name-error" className="text-xs text-red-400 mt-2">
+                {err}
+              </p>
+            )}
           </div>
 
           <div className="flex justify-end gap-3 mt-4">
-            <Button type="button" onClick={onClose} variant="outline">
+            <Button data-testid="cancel-btn" type="button" onClick={onClose} variant="outline">
               Cancel
             </Button>
-            <Button type="submit" disabled={!name.trim() || loading}>
+            <Button data-testid="submit-btn" type="submit" disabled={!name.trim() || loading}>
               {loading ? (
                 <>
                   <Loader2 className="mr-2 animate-spin" />

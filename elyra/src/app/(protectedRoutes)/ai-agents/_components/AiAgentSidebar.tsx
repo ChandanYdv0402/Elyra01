@@ -7,14 +7,14 @@ import { Input } from "@/components/ui/input";
 import CreateAssistantModal from "./CreateAssistantModal";
 import { useAiAgentStore } from "@/store/useAiAgentStore";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { AiAgents } from "@prisma/client";
+import type { AiAgents } from "@prisma/client";
 
 type Props = {
-  aiAgents: AiAgents[] | [];
+  aiAgents: AiAgents[];
   userId: string;
 };
 
-const AiAgentSidebar = ({ aiAgents, userId }: Props) => {
+const AiAgentSidebar = ({ aiAgents = [], userId }: Props) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { assistant, setAssistant } = useAiAgentStore();
 
@@ -22,31 +22,28 @@ const AiAgentSidebar = ({ aiAgents, userId }: Props) => {
     <div className="w-[300px] border-r border-border flex flex-col">
       <div className="p-4">
         <Button
-          className="w-full flex items-center gap-2 mb-4 hover:cursor-pointer"
+          className="w-full flex items-center gap-2 mb-4"
           onClick={() => setIsModalOpen(true)}
         >
           <Plus /> Create Assistant
         </Button>
         <div className="relative">
-          <Input
-            placeholder="Search Assistants"
-            className="bg-neutral-900 border-neutral-700 pl-10"
-          />
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-neutral-400" />
+          <Input placeholder="Search Assistants" className="pl-10" />
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
         </div>
       </div>
 
-      <ScrollArea className="mt-4 overflow-auto">
-        {aiAgents.map((aiAssistant) => (
-          <div
-            className={`p-4 ${
-              aiAssistant.id === assistant?.id ? "bg-primary/10" : ""
-            } hover:bg-primary/20 cursor-pointer`}
-            key={aiAssistant.id}
-            onClick={() => setAssistant(aiAssistant)}
+      <ScrollArea className="mt-2 overflow-auto">
+        {aiAgents.map((a) => (
+          <button
+            key={a.id}
+            className={`w-full text-left p-4 ${
+              a.id === assistant?.id ? "bg-primary/10" : ""
+            } hover:bg-primary/20`}
+            onClick={() => setAssistant(a)}
           >
-            <div className="font-medium">{aiAssistant.name}</div>
-          </div>
+            <div className="font-medium truncate">{a.name}</div>
+          </button>
         ))}
       </ScrollArea>
 

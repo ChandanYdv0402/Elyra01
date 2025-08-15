@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,14 @@ type Props = {
 
 const AiAgentSidebar = ({ aiAgents = [], userId }: Props) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [query, setQuery] = useState("");
   const { assistant, setAssistant } = useAiAgentStore();
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return aiAgents;
+    return aiAgents.filter((a) => a.name.toLowerCase().includes(q));
+  }, [aiAgents, query]);
 
   return (
     <div className="w-[300px] border-r border-border flex flex-col">
@@ -28,23 +35,32 @@ const AiAgentSidebar = ({ aiAgents = [], userId }: Props) => {
           <Plus /> Create Assistant
         </Button>
         <div className="relative">
-          <Input placeholder="Search Assistants" className="pl-10" />
+          <Input
+            placeholder="Search Assistants"
+            className="pl-10"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
         </div>
       </div>
 
       <ScrollArea className="mt-2 overflow-auto">
-        {aiAgents.map((a) => (
-          <button
-            key={a.id}
-            className={`w-full text-left p-4 ${
-              a.id === assistant?.id ? "bg-primary/10" : ""
-            } hover:bg-primary/20`}
-            onClick={() => setAssistant(a)}
-          >
-            <div className="font-medium truncate">{a.name}</div>
-          </button>
-        ))}
+        {filtered.length === 0 ? (
+          <div className="p-4 text-sm text-muted-foreground">No assistants found</div>
+        ) : (
+          filtered.map((a) => (
+            <button
+              key={a.id}
+              className={`w-full text-left p-4 ${
+                a.id === assistant?.id ? "bg-primary/10" : ""
+              } hover:bg-primary/20`}
+              onClick={() => setAssistant(a)}
+            >
+              <div className="font-medium truncate">{a.name}</div>
+            </button>
+          ))
+        )}
       </ScrollArea>
 
       <CreateAssistantModal

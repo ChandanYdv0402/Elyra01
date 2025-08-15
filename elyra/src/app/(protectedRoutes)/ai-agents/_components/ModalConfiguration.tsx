@@ -11,6 +11,15 @@ import { useAiAgentStore } from "@/store/useAiAgentStore";
 import { updateAssistant } from "@/actions/vapi";
 import { toast } from "sonner";
 
+const useDebouncedValue = <T,>(value: T, delay = 300) => {
+  const [v, setV] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setV(value), delay);
+    return () => clearTimeout(t);
+  }, [value, delay]);
+  return v;
+};
+
 const ModelConfiguration = () => {
   const { assistant } = useAiAgentStore();
 
@@ -19,6 +28,8 @@ const ModelConfiguration = () => {
   const [systemPrompt, setSystemPrompt] = useState("");
   const [initialFirst, setInitialFirst] = useState("");
   const [initialPrompt, setInitialPrompt] = useState("");
+
+  const debouncedPrompt = useDebouncedValue(systemPrompt, 300);
 
   useEffect(() => {
     if (assistant) {
@@ -32,8 +43,8 @@ const ModelConfiguration = () => {
   }, [assistant]);
 
   const isDirty = useMemo(
-    () => firstMessage !== initialFirst || systemPrompt !== initialPrompt,
-    [firstMessage, initialFirst, systemPrompt, initialPrompt]
+    () => firstMessage !== initialFirst || debouncedPrompt !== initialPrompt,
+    [firstMessage, initialFirst, debouncedPrompt, initialPrompt]
   );
 
   useEffect(() => {
@@ -67,11 +78,11 @@ const ModelConfiguration = () => {
     setLoading(true);
     const tId = toast.loading("Updating assistant...");
     try {
-      const res = await updateAssistant(assistant.id, firstMessage, systemPrompt);
+      const res = await updateAssistant(assistant.id, firstMessage, debouncedPrompt);
       if (!res.success) throw new Error(res.message);
       toast.success("Assistant updated successfully", { id: tId });
       setInitialFirst(firstMessage);
-      setInitialPrompt(systemPrompt);
+      setInitialPrompt(debouncedPrompt);
     } catch (error: any) {
       toast.error(error?.message || "Failed to update assistant", { id: tId });
     } finally {

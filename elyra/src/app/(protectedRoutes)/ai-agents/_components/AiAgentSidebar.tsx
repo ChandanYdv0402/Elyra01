@@ -25,13 +25,12 @@ const AiAgentSidebar = ({ aiAgents = [], userId }: Props) => {
     return aiAgents.filter((a) => a.name.toLowerCase().includes(q));
   }, [aiAgents, query]);
 
+  const list = filtered;
+
   return (
     <div className="w-[300px] border-r border-border flex flex-col">
       <div className="p-4">
-        <Button
-          className="w-full flex items-center gap-2 mb-4"
-          onClick={() => setIsModalOpen(true)}
-        >
+        <Button className="w-full flex items-center gap-2 mb-4" onClick={() => setIsModalOpen(true)}>
           <Plus /> Create Assistant
         </Button>
         <div className="relative">
@@ -40,16 +39,25 @@ const AiAgentSidebar = ({ aiAgents = [], userId }: Props) => {
             className="pl-10"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            aria-label="Search assistants"
           />
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
         </div>
       </div>
 
       <ScrollArea className="mt-2 overflow-auto">
-        {filtered.length === 0 ? (
-          <div className="p-4 text-sm text-muted-foreground">No assistants found</div>
+        {aiAgents.length === 0 ? (
+          <div className="p-4 text-sm text-muted-foreground">
+            You don’t have any assistants yet.{" "}
+            <button className="underline" onClick={() => setIsModalOpen(true)}>
+              Create your first one
+            </button>
+            .
+          </div>
+        ) : list.length === 0 ? (
+          <div className="p-4 text-sm text-muted-foreground">No assistants match “{query}”.</div>
         ) : (
-          filtered.map((a) => (
+          list.map((a) => (
             <button
               key={a.id}
               className={`w-full text-left p-4 ${
@@ -63,11 +71,7 @@ const AiAgentSidebar = ({ aiAgents = [], userId }: Props) => {
         )}
       </ScrollArea>
 
-      <CreateAssistantModal
-        isOpen={isModalOpen}
-        userId={userId}
-        onClose={() => setIsModalOpen(false)}
-      />
+      <CreateAssistantModal isOpen={isModalOpen} userId={userId} onClose={() => setIsModalOpen(false)} />
     </div>
   );
 };

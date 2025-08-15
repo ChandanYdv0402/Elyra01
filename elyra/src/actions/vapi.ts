@@ -4,8 +4,20 @@ import { aiAgentPrompt } from "@/lib/data";
 import { prismaClient } from "@/lib/prismaClient";
 import { vapiServer } from "@/lib/vapi/vapiServer";
 
-export const createAssistant = async (name: string, userId: string) => {
+const sanitize = (s: string) => s?.trim();
+
+export const createAssistant = async (rawName: string, rawUserId: string) => {
   try {
+    const name = sanitize(rawName);
+    const userId = sanitize(rawUserId);
+
+    if (!name || name.length < 2) {
+      return { success: false, status: 400, message: "Name must be at least 2 characters" };
+    }
+    if (!userId) {
+      return { success: false, status: 400, message: "Missing userId" };
+    }
+
     const created = await vapiServer.assistants.create({
       name,
       firstMessage: `Hi there, this is ${name} from customer support. How can I help you today?`,
@@ -18,17 +30,15 @@ export const createAssistant = async (name: string, userId: string) => {
       serverMessages: [],
     });
 
-    // Some providers return `assistantId`, others nest id. Prefer explicit, fallback to nested.
     const externalId =
       (created as any).assistantId ??
       (created as any)?.assistant?.id ??
       (created as any)?.id;
 
     if (!externalId) {
-      throw new Error("Assistant id missing from provider response");
+      return { success: false, status: 502, message: "Provider did not return assistant id" };
     }
 
-    // Only set the foreign key `userId`. Do not redundantly `connect` the relation.
     const aiAgent = await prismaClient.aiAgents.create({
       data: {
         id: externalId,
@@ -42,18 +52,22 @@ export const createAssistant = async (name: string, userId: string) => {
     });
 
     return { success: true, status: 200, data: aiAgent };
-  } catch (error) {
+  } catch (error: any) {
+    const msg = error?.message ?? "Failed to create agent";
     console.error("Error creating agent:", error);
-    return { success: false, status: 500, message: "Failed to create agent" };
+    return { success: false, status: 500, message: msg };
   }
 };
 
 export const updateAssistant = async (
   assistantId: string,
-  firstMessage: string,
-  systemPrompt: string
+  rawFirstMessage: string,
+  rawSystemPrompt: string
 ) => {
   try {
+    const firstMessage = sanitize(rawFirstMessage) || "Hello! How can I help you today?";
+    const systemPrompt = sanitize(rawSystemPrompt) || aiAgentPrompt;
+
     await vapiServer.assistants.update(assistantId, {
       firstMessage,
       model: {
@@ -70,8 +84,9 @@ export const updateAssistant = async (
     });
 
     return { success: true, status: 200, data: updated };
-  } catch (error) {
+  } catch (error: any) {
+    const msg = error?.message ?? "Failed to update agent";
     console.error("Error updating agent:", error);
-    return { success: false, status: 500, message: "Failed to update agent" };
+    return { success: false, status: 500, message: msg };
   }
 };

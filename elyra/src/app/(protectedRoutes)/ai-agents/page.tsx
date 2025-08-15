@@ -11,16 +11,12 @@ const page = async () => {
     redirect("/sign-in");
   }
   const user = checkUser.user as UserWithAiAgent;
+
   console.log("User data:", checkUser.user);
+
   return (
     <div className="w-full flex h-[80vh] text-primary border border-border rounded-se-xl">
-      {/* Left Sidebar */}
-      <AiAgentSidebar
-        aiAgents={user?.aiAgents || []}
-        userId={user?.id}
-      />
-
-      {/* Main Content */}
+      <AiAgentSidebar aiAgents={user?.aiAgents || []} userId={user?.id} />
       <div className="flex-1 flex flex-col">
         <ModelSection />
       </div>

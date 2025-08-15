@@ -83,12 +83,19 @@ const ModelConfiguration = () => {
     const tId = toast.loading("Updating assistant...");
     try {
       const res = await updateAssistant(assistant.id, firstMessage, debouncedPrompt);
-      if (!res.success) throw new Error(res.message);
+      if (!res.success) {
+        const msg = (res as any)?.error?.message || res.message || "Update failed";
+        throw new Error(msg);
+      }
       toast.success("Assistant updated successfully", { id: tId });
       setInitialFirst(firstMessage);
       setInitialPrompt(debouncedPrompt);
     } catch (error: any) {
-      toast.error(error?.message || "Failed to update assistant", { id: tId });
+      const msg =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to update assistant";
+      toast.error(msg, { id: tId });
     } finally {
       setLoading(false);
     }

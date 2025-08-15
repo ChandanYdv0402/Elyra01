@@ -15,18 +15,22 @@ const ModelSectionSkeleton = () => (
 
 const page = async () => {
   const checkUser = await onAuthenticateUser();
-  if (!checkUser.user) {
+  const user = checkUser.user as UserWithAiAgent | null;
+
+  if (!user) {
     redirect("/sign-in");
   }
-  const user = checkUser.user as UserWithAiAgent;
 
   if (process.env.NODE_ENV !== "production") {
-    console.log("User data:", checkUser.user);
+    console.log("User data:", user);
   }
+
+  // Pass minimal, readonly-friendly props
+  const aiAgents = Array.isArray(user.aiAgents) ? user.aiAgents : [];
 
   return (
     <div className="w-full flex h-[80vh] text-primary border border-border rounded-se-xl">
-      <AiAgentSidebar aiAgents={user?.aiAgents || []} userId={user?.id} />
+      <AiAgentSidebar aiAgents={aiAgents} userId={user.id} />
       <div className="flex-1 flex flex-col">
         <Suspense fallback={<ModelSectionSkeleton />}>
           <ModelSection />

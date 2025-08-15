@@ -2,7 +2,7 @@
 
 import { aiAgentPrompt } from "@/lib/data";
 import { prismaClient } from "@/lib/prismaClient";
-
+import { vapiServer } from "@/lib/vapi/vapiServer";
 
 export const createAssistant = async (name: string, userId: string) => {
   try {

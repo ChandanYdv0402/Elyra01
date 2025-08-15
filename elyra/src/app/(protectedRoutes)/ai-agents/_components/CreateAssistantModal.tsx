@@ -2,7 +2,6 @@
 "use client";
 
 import type React from "react";
-
 import { useState } from "react";
 import { Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,8 +16,11 @@ interface Props {
   userId: string;
 }
 
+const MIN_LEN = 2;
+
 const CreateAssistantModal = ({ isOpen, onClose, userId }: Props) => {
   const [name, setName] = useState("");
+  const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -26,16 +28,25 @@ const CreateAssistantModal = ({ isOpen, onClose, userId }: Props) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return; // prevent double-submit
+
+    const clean = name.trim();
+    if (clean.length < MIN_LEN) {
+      setErr(`Name must be at least ${MIN_LEN} characters`);
+      return;
+    }
+
     setLoading(true);
+    setErr(null);
     try {
-      const res = await createAssistant(name, userId);
+      const res = await createAssistant(clean, userId);
       if (!res.success) throw new Error(res.message);
       router.refresh();
       setName("");
       onClose();
       toast.success("Assistant created successfully");
-    } catch {
-      toast.error("Failed to create assistant");
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to create assistant");
     } finally {
       setLoading(false);
     }
@@ -51,22 +62,23 @@ const CreateAssistantModal = ({ isOpen, onClose, userId }: Props) => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="mb-6">
+        <form onSubmit={handleSubmit} noValidate>
+          <div className="mb-2">
             <label className="block font-medium mb-2">Assistant Name</label>
             <Input
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+                if (err) setErr(null);
+              }}
               placeholder="Enter assistant name"
               className="bg-neutral-800 border-neutral-700"
               required
             />
-            <p className="text-xs text-neutral-400 mt-2">
-              This name will be used to identify your assistant.
-            </p>
+            {err && <p className="text-xs text-red-400 mt-2">{err}</p>}
           </div>
 
-          <div className="flex justify-end gap-3">
+        <div className="flex justify-end gap-3 mt-4">
             <Button type="button" onClick={onClose} variant="outline">
               Cancel
             </Button>

@@ -1,17 +1,21 @@
 import React, { Suspense } from "react";
 import AiAgentSidebar from "./_components/AiAgentSidebar";
-import ModelSection from "./_components/ModelSection";
 import { onAuthenticateUser } from "@/actions/auth";
 import { redirect } from "next/navigation";
 import { UserWithAiAgent } from "@/lib/type";
+import dynamic from "next/dynamic";
 
-const ModelSectionSkeleton = () => (
-  <div className="p-6 animate-pulse">
-    <div className="h-6 w-48 bg-secondary rounded mb-4" />
-    <div className="h-4 w-80 bg-secondary rounded mb-2" />
-    <div className="h-4 w-64 bg-secondary rounded" />
-  </div>
-);
+// code-split the heavier panel
+const ModelSection = dynamic(() => import("./_components/ModelSection"), {
+  ssr: true,
+  loading: () => (
+    <div className="p-6 animate-pulse">
+      <div className="h-6 w-48 bg-secondary rounded mb-4" />
+      <div className="h-4 w-80 bg-secondary rounded mb-2" />
+      <div className="h-4 w-64 bg-secondary rounded" />
+    </div>
+  ),
+});
 
 const page = async () => {
   const checkUser = await onAuthenticateUser();
@@ -25,14 +29,13 @@ const page = async () => {
     console.log("User data:", user);
   }
 
-  // Pass minimal, readonly-friendly props
   const aiAgents = Array.isArray(user.aiAgents) ? user.aiAgents : [];
 
   return (
     <div className="w-full flex h-[80vh] text-primary border border-border rounded-se-xl">
       <AiAgentSidebar aiAgents={aiAgents} userId={user.id} />
       <div className="flex-1 flex flex-col">
-        <Suspense fallback={<ModelSectionSkeleton />}>
+        <Suspense fallback={null}>
           <ModelSection />
         </Suspense>
       </div>

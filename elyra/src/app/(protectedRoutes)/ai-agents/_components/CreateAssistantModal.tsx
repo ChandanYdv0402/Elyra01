@@ -2,7 +2,7 @@
 "use client";
 
 import type React from "react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,11 +37,16 @@ const CreateAssistantModal = ({ isOpen, onClose, userId }: Props) => {
 
   if (!isOpen) return null;
 
-  const handleBackdrop = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleBackdrop = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) onClose();
-  };
+  }, [onClose]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setName(e.target.value);
+    setErr(null);
+  }, []);
+
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
 
@@ -53,23 +58,23 @@ const CreateAssistantModal = ({ isOpen, onClose, userId }: Props) => {
 
     setLoading(true);
     setErr(null);
+    const tId = toast.loading("Creating assistant...");
     try {
       const res = await createAssistant(clean, userId);
       if (!res.success) throw new Error(res.message);
       router.refresh();
       setName("");
       onClose();
-      toast.success("Assistant created successfully");
+      toast.success("Assistant created successfully", { id: tId });
     } catch (error: any) {
-      toast.error(error?.message || "Failed to create assistant");
+      toast.error(error?.message || "Failed to create assistant", { id: tId });
     } finally {
       setLoading(false);
     }
-  };
+  }, [loading, name, onClose, router, userId]);
 
   return (
     <div
-      data-testid="create-assistant-overlay"
       className="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
       onMouseDown={handleBackdrop}
       role="dialog"
@@ -77,60 +82,37 @@ const CreateAssistantModal = ({ isOpen, onClose, userId }: Props) => {
       aria-labelledby={titleId}
       aria-describedby={descId}
     >
-      <div data-testid="create-assistant-modal" className="bg-muted/80 rounded-lg w-full max-w-md p-6 border border-input shadow-xl">
+      <div className="bg-muted/80 rounded-lg w-full max-w-md p-6 border border-input shadow-xl">
         <div className="flex justify-between items-center mb-6">
-          <h2 id={titleId} className="text-xl font-semibold">
-            Create Assistant
-          </h2>
-          <button data-testid="close-dialog" onClick={onClose} aria-label="Close dialog" className="text-neutral-400 hover:text-white">
+          <h2 id={titleId} className="text-xl font-semibold">Create Assistant</h2>
+          <button onClick={onClose} aria-label="Close dialog" className="text-neutral-400 hover:text-white">
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <p id={descId} className="sr-only">
-          Enter a name and press Create to add a new assistant.
-        </p>
+        <p id={descId} className="sr-only">Enter a name and press Create to add a new assistant.</p>
 
         <form onSubmit={handleSubmit} noValidate>
           <div className="mb-2">
-            <label className="block font-medium mb-2" htmlFor="assistant-name">
-              Assistant Name
-            </label>
+            <label className="block font-medium mb-2" htmlFor="assistant-name">Assistant Name</label>
             <Input
               id="assistant-name"
-              data-testid="assistant-name-input"
               ref={inputRef}
               value={name}
-              onChange={(e) => {
-                setName(e.target.value);
-                if (err) setErr(null);
-              }}
+              onChange={handleChange}
               placeholder="Enter assistant name"
               className="bg-neutral-800 border-neutral-700"
               required
               aria-invalid={!!err}
               aria-describedby={err ? "assistant-name-error" : undefined}
             />
-            {err && (
-              <p id="assistant-name-error" className="text-xs text-red-400 mt-2">
-                {err}
-              </p>
-            )}
+            {err && <p id="assistant-name-error" className="text-xs text-red-400 mt-2">{err}</p>}
           </div>
 
           <div className="flex justify-end gap-3 mt-4">
-            <Button data-testid="cancel-btn" type="button" onClick={onClose} variant="outline">
-              Cancel
-            </Button>
-            <Button data-testid="submit-btn" type="submit" disabled={!name.trim() || loading}>
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                "Create Assistant"
-              )}
+            <Button type="button" onClick={onClose} variant="outline">Cancel</Button>
+            <Button type="submit" disabled={!name.trim() || loading}>
+              {loading ? (<><Loader2 className="mr-2 animate-spin" />Creating...</>) : "Create Assistant"}
             </Button>
           </div>
         </form>

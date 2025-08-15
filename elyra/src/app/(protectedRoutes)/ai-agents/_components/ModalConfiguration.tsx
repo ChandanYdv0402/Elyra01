@@ -28,8 +28,9 @@ const ModelConfiguration = () => {
   if (!assistant) {
     return (
       <div className="flex justify-center items-center h-[500px] w-full">
-        <div className="bg-neutral-900 rounded-xl p-6 w-full">
-          <p className="text-primary/80 text-center">
+        <div className="rounded-xl p-10 w-full max-w-xl text-center border border-dashed border-border bg-neutral-900/60">
+          <Info className="mx-auto mb-3 h-5 w-5 text-neutral-400" />
+          <p className="text-primary/80">
             No assistant selected. Please select an assistant to configure the model settings.
           </p>
         </div>
@@ -44,7 +45,6 @@ const ModelConfiguration = () => {
       if (!res.success) throw new Error(res.message);
       toast.success("Assistant updated successfully");
     } catch (error) {
-      console.error("Error updating assistant:", error);
       toast.error("Failed to update assistant");
     } finally {
       setLoading(false);

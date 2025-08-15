@@ -4,19 +4,12 @@ import { aiAgentPrompt } from "@/lib/data";
 import { prismaClient } from "@/lib/prismaClient";
 import { vapiServer } from "@/lib/vapi/vapiServer";
 
-const MODEL = "gpt-4o";
-const PROVIDER = "openai";
+const FALLBACK_MODEL = "gpt-4o";
+const FALLBACK_PROVIDER = "openai";
 const DEFAULT_TEMP = 0.5;
 
 const buildFirstMessage = (name: string) =>
   `Hi there, this is ${name} from customer support. How can I help you today?`;
-
-const buildModelConfig = (systemPrompt: string, withTemp = true) => ({
-  model: MODEL,
-  provider: PROVIDER,
-  messages: [{ role: "system", content: systemPrompt }],
-  ...(withTemp ? { temperature: DEFAULT_TEMP } : {}),
-});
 
 const sanitize = (s: string) => s?.trim();
 
@@ -30,7 +23,12 @@ export const createAssistant = async (rawName: string, rawUserId: string) => {
     const created = await vapiServer.assistants.create({
       name,
       firstMessage: buildFirstMessage(name),
-      model: buildModelConfig(aiAgentPrompt),
+      model: {
+        model: FALLBACK_MODEL,
+        provider: FALLBACK_PROVIDER,
+        messages: [{ role: "system", content: aiAgentPrompt }],
+        temperature: DEFAULT_TEMP,
+      },
       serverMessages: [],
     });
 
@@ -38,11 +36,14 @@ export const createAssistant = async (rawName: string, rawUserId: string) => {
       (created as any).assistantId ?? (created as any)?.assistant?.id ?? (created as any)?.id;
     if (!externalId) return { success: false, status: 502, message: "Provider did not return assistant id" };
 
+    const providerModel = (created as any)?.model?.model ?? FALLBACK_MODEL;
+    const providerName = (created as any)?.model?.provider ?? FALLBACK_PROVIDER;
+
     const aiAgent = await prismaClient.aiAgents.create({
       data: {
         id: externalId,
-        model: MODEL,
-        provider: PROVIDER,
+        model: providerModel,
+        provider: providerName,
         prompt: aiAgentPrompt,
         name,
         firstMessage: buildFirstMessage(name),
@@ -66,15 +67,22 @@ export const updateAssistant = async (
     const firstMessage = sanitize(rawFirstMessage) || "Hello! How can I help you today?";
     const systemPrompt = sanitize(rawSystemPrompt) || aiAgentPrompt;
 
-    await vapiServer.assistants.update(assistantId, {
+    const updatedExternal = await vapiServer.assistants.update(assistantId, {
       firstMessage,
-      model: buildModelConfig(systemPrompt, /*withTemp*/ false),
+      model: {
+        model: FALLBACK_MODEL,
+        provider: FALLBACK_PROVIDER,
+        messages: [{ role: "system", content: systemPrompt }],
+      },
       serverMessages: [],
     });
 
+    const providerModel = (updatedExternal as any)?.model?.model ?? FALLBACK_MODEL;
+    const providerName = (updatedExternal as any)?.model?.provider ?? FALLBACK_PROVIDER;
+
     const updated = await prismaClient.aiAgents.update({
       where: { id: assistantId },
-      data: { firstMessage, prompt: systemPrompt },
+      data: { firstMessage, prompt: systemPrompt, model: providerModel, provider: providerName },
     });
 
     return { success: true, status: 200, data: updated };

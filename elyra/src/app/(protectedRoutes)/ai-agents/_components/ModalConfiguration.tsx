@@ -51,11 +51,16 @@ const ModelConfiguration = () => {
     }
   };
 
+  const onSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
+    e.preventDefault();
+    if (!loading) await handleUpdateAssistant();
+  };
+
   return (
-    <div className="bg-neutral-900 rounded-xl p-6 mb-6">
+    <form className="bg-neutral-900 rounded-xl p-6 mb-6" onSubmit={onSubmit}>
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Model</h2>
-        <Button onClick={handleUpdateAssistant} disabled={loading}>
+        <Button type="submit" disabled={loading}>
           {loading ? (
             <>
               <Loader2 className="animate-spin mr-2" />
@@ -104,7 +109,7 @@ const ModelConfiguration = () => {
           <DropdownSelect value={assistant?.model || ""} />
         </ConfigField>
       </div>
-    </div>
+    </form>
   );
 };
 

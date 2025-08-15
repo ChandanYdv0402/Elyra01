@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Info, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import ConfigField from "./ConfigField";
@@ -18,12 +18,24 @@ const ModelConfiguration = () => {
   const [firstMessage, setFirstMessage] = useState("");
   const [systemPrompt, setSystemPrompt] = useState("");
 
+  const [initialFirst, setInitialFirst] = useState("");
+  const [initialPrompt, setInitialPrompt] = useState("");
+
   useEffect(() => {
     if (assistant) {
-      setFirstMessage(assistant?.firstMessage || "");
-      setSystemPrompt(assistant?.prompt || "");
+      const f = assistant?.firstMessage || "";
+      const p = assistant?.prompt || "";
+      setFirstMessage(f);
+      setSystemPrompt(p);
+      setInitialFirst(f);
+      setInitialPrompt(p);
     }
   }, [assistant]);
+
+  const isDirty = useMemo(
+    () => firstMessage !== initialFirst || systemPrompt !== initialPrompt,
+    [firstMessage, initialFirst, systemPrompt, initialPrompt]
+  );
 
   if (!assistant) {
     return (
@@ -39,11 +51,14 @@ const ModelConfiguration = () => {
   }
 
   const handleUpdateAssistant = async () => {
+    if (!isDirty) return;
     setLoading(true);
     try {
       const res = await updateAssistant(assistant.id, firstMessage, systemPrompt);
       if (!res.success) throw new Error(res.message);
       toast.success("Assistant updated successfully");
+      setInitialFirst(firstMessage);
+      setInitialPrompt(systemPrompt);
     } catch (error) {
       toast.error("Failed to update assistant");
     } finally {
@@ -60,7 +75,7 @@ const ModelConfiguration = () => {
     <form className="bg-neutral-900 rounded-xl p-6 mb-6" onSubmit={onSubmit}>
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Model</h2>
-        <Button type="submit" disabled={loading}>
+        <Button type="submit" disabled={loading || !isDirty}>
           {loading ? (
             <>
               <Loader2 className="animate-spin mr-2" />

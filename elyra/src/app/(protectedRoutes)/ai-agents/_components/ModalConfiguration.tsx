@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Info, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import ConfigField from "./ConfigField";
@@ -15,7 +15,6 @@ const ModelConfiguration = () => {
   const { assistant } = useAiAgentStore();
 
   const [loading, setLoading] = useState(false);
-
   const [firstMessage, setFirstMessage] = useState("");
   const [systemPrompt, setSystemPrompt] = useState("");
 
@@ -31,8 +30,7 @@ const ModelConfiguration = () => {
       <div className="flex justify-center items-center h-[500px] w-full">
         <div className="bg-neutral-900 rounded-xl p-6 w-full">
           <p className="text-primary/80 text-center">
-            No assistant selected. Please select an assistant to configure the
-            model settings.
+            No assistant selected. Please select an assistant to configure the model settings.
           </p>
         </div>
       </div>
@@ -42,15 +40,8 @@ const ModelConfiguration = () => {
   const handleUpdateAssistant = async () => {
     setLoading(true);
     try {
-      const res = await updateAssistant(
-        assistant.id,
-        firstMessage,
-        systemPrompt
-      );
-
-      if (!res.success) {
-        throw new Error(res.message);
-      }
+      const res = await updateAssistant(assistant.id, firstMessage, systemPrompt);
+      if (!res.success) throw new Error(res.message);
       toast.success("Assistant updated successfully");
     } catch (error) {
       console.error("Error updating assistant:", error);
@@ -75,9 +66,8 @@ const ModelConfiguration = () => {
           )}
         </Button>
       </div>
-      <p className="text-neutral-400 mb-6">
-        Configure the behavior of the assistant.
-      </p>
+
+      <p className="text-neutral-400 mb-6">Configure the behavior of the assistant.</p>
 
       <div className="mb-6">
         <div className="flex items-center mb-2">
@@ -110,7 +100,7 @@ const ModelConfiguration = () => {
           <DropdownSelect value={assistant?.provider || ""} />
         </ConfigField>
 
-        <ConfigField label="Model" showInfo={true}>
+        <ConfigField label="Model" showInfo>
           <DropdownSelect value={assistant?.model || ""} />
         </ConfigField>
       </div>

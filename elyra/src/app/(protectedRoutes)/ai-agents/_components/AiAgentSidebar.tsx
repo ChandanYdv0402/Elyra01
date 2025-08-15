@@ -14,6 +14,15 @@ type Props = {
   userId: string;
 };
 
+const useDebounced = (value: string, ms = 200) => {
+  const [v, setV] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setV(value), ms);
+    return () => clearTimeout(t);
+  }, [value, ms]);
+  return v;
+};
+
 type ItemProps = {
   item: AiAgents;
   index: number;
@@ -25,7 +34,6 @@ type ItemProps = {
 const AssistantItem = memo(({ item, index, activeIndex, selectedId, onSelect }: ItemProps) => {
   const selected = item.id === selectedId;
   const active = index === activeIndex;
-
   return (
     <div
       role="option"
@@ -46,28 +54,20 @@ AssistantItem.displayName = "AssistantItem";
 const AiAgentSidebar = ({ aiAgents = [], userId }: Props) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const debouncedQuery = useDebounced(query, 250);
   const [activeIndex, setActiveIndex] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
 
   const { assistant, setAssistant } = useAiAgentStore();
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const list = q ? aiAgents.filter((a) => a.name.toLowerCase().includes(q)) : aiAgents;
-    return list;
-  }, [aiAgents, query]);
+    const q = debouncedQuery.trim().toLowerCase();
+    return q ? aiAgents.filter((a) => a.name.toLowerCase().includes(q)) : aiAgents;
+  }, [aiAgents, debouncedQuery]);
 
-  useEffect(() => {
-    // Reset highlight when filter changes
-    setActiveIndex(0);
-  }, [query]);
+  useEffect(() => setActiveIndex(0), [debouncedQuery]);
 
-  const onSelect = useCallback(
-    (a: AiAgents) => {
-      setAssistant(a);
-    },
-    [setAssistant]
-  );
+  const onSelect = useCallback((a: AiAgents) => setAssistant(a), [setAssistant]);
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (filtered.length === 0) return;
@@ -102,14 +102,7 @@ const AiAgentSidebar = ({ aiAgents = [], userId }: Props) => {
       </div>
 
       <ScrollArea className="mt-2 overflow-auto">
-        <div
-          ref={listRef}
-          role="listbox"
-          aria-label="Assistants"
-          onKeyDown={onKeyDown}
-          tabIndex={0}
-          className="outline-none"
-        >
+        <div ref={listRef} role="listbox" aria-label="Assistants" onKeyDown={onKeyDown} tabIndex={0} className="outline-none">
           {aiAgents.length === 0 ? (
             <div className="p-4 text-sm text-muted-foreground">
               You don’t have any assistants yet.{" "}
@@ -119,17 +112,10 @@ const AiAgentSidebar = ({ aiAgents = [], userId }: Props) => {
               .
             </div>
           ) : filtered.length === 0 ? (
-            <div className="p-4 text-sm text-muted-foreground">No assistants match “{query}”.</div>
+            <div className="p-4 text-sm text-muted-foreground">No assistants match “{debouncedQuery}”.</div>
           ) : (
             filtered.map((a, i) => (
-              <AssistantItem
-                key={a.id}
-                item={a}
-                index={i}
-                activeIndex={activeIndex}
-                selectedId={assistant?.id}
-                onSelect={onSelect}
-              />
+              <AssistantItem key={a.id} item={a} index={i} activeIndex={activeIndex} selectedId={assistant?.id} onSelect={onSelect} />
             ))
           )}
         </div>

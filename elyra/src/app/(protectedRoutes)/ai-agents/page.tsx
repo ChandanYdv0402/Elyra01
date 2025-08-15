@@ -5,7 +5,6 @@ import { redirect } from "next/navigation";
 import { UserWithAiAgent } from "@/lib/type";
 import dynamic from "next/dynamic";
 
-// code-split the heavier panel
 const ModelSection = dynamic(() => import("./_components/ModelSection"), {
   ssr: true,
   loading: () => (
@@ -32,12 +31,14 @@ const page = async () => {
   const aiAgents = Array.isArray(user.aiAgents) ? user.aiAgents : [];
 
   return (
-    <div className="w-full flex h-[80vh] text-primary border border-border rounded-se-xl">
-      <AiAgentSidebar aiAgents={aiAgents} userId={user.id} />
-      <div className="flex-1 flex flex-col">
-        <Suspense fallback={null}>
-          <ModelSection />
-        </Suspense>
+    <div className="w-full min-h-[70vh] md:h-[80vh] text-primary border border-border rounded-xl overflow-hidden">
+      <div className="flex flex-col md:flex-row h-full">
+        <AiAgentSidebar aiAgents={aiAgents} userId={user.id} />
+        <div className="flex-1 flex flex-col p-4 md:p-6 lg:p-8">
+          <Suspense fallback={null}>
+            <ModelSection />
+          </Suspense>
+        </div>
       </div>
     </div>
   );

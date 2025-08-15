@@ -20,6 +20,8 @@ const useDebouncedValue = <T,>(value: T, delay = 300) => {
   return v;
 };
 
+const RECOMMENDED_MAX = 4000;
+
 const ModelConfiguration = () => {
   const { assistant } = useAiAgentStore();
 
@@ -30,6 +32,8 @@ const ModelConfiguration = () => {
   const [initialPrompt, setInitialPrompt] = useState("");
 
   const debouncedPrompt = useDebouncedValue(systemPrompt, 300);
+  const charCount = debouncedPrompt.length;
+  const overLimit = charCount > RECOMMENDED_MAX;
 
   useEffect(() => {
     if (assistant) {
@@ -99,7 +103,7 @@ const ModelConfiguration = () => {
     <form className="bg-neutral-900 rounded-xl p-6 mb-6" onSubmit={onSubmit}>
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Model</h2>
-        <Button type="submit" disabled={loading || !isDirty}>
+        <Button type="submit" disabled={loading || !isDirty || overLimit}>
           {loading ? (
             <>
               <Loader2 className="animate-spin mr-2" />
@@ -130,6 +134,9 @@ const ModelConfiguration = () => {
           <div className="flex items-center">
             <label className="font-medium">System Prompt</label>
             <Info className="h-4 w-4 text-neutral-500 ml-2" />
+          </div>
+          <div className={`text-xs ${overLimit ? "text-red-400" : "text-neutral-500"}`}>
+            {charCount}/{RECOMMENDED_MAX} {overLimit && "— exceeds recommended length"}
           </div>
         </div>
         <Textarea

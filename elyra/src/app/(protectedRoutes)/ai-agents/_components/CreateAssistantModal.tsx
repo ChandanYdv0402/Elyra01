@@ -8,13 +8,13 @@ import { Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { createAssistant } from "@/actions/vapi";
+import { createAssistant } from "@/action/vapi";
 import { useRouter } from "next/navigation";
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  userId:string
+  userId: string;
 }
 
 const CreateAssistantModal = ({ isOpen, onClose, userId }: Props) => {
@@ -29,15 +29,12 @@ const CreateAssistantModal = ({ isOpen, onClose, userId }: Props) => {
     setLoading(true);
     try {
       const res = await createAssistant(name, userId);
-      if (!res.success) {
-        throw new Error(res.message);
-      }
+      if (!res.success) throw new Error(res.message);
       router.refresh();
       setName("");
       onClose();
       toast.success("Assistant created successfully");
-    } catch (error) {
-      // console.error("Error creating assistant:", error);
+    } catch {
       toast.error("Failed to create assistant");
     } finally {
       setLoading(false);
@@ -49,10 +46,7 @@ const CreateAssistantModal = ({ isOpen, onClose, userId }: Props) => {
       <div className="bg-muted/80 rounded-lg w-full max-w-md p-6 border border-input shadow-xl">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-semibold">Create Assistant</h2>
-          <button
-            onClick={onClose}
-            className="text-neutral-400 hover:text-white"
-          >
+          <button onClick={onClose} className="text-neutral-400 hover:text-white">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -76,7 +70,7 @@ const CreateAssistantModal = ({ isOpen, onClose, userId }: Props) => {
             <Button type="button" onClick={onClose} variant="outline">
               Cancel
             </Button>
-            <Button type="submit" disabled={!name.trim() || loading} >
+            <Button type="submit" disabled={!name.trim() || loading}>
               {loading ? (
                 <>
                   <Loader2 className="mr-2 animate-spin" />

@@ -18,9 +18,20 @@ export const createAssistant = async (name: string, userId: string) => {
       serverMessages: [],
     });
 
+    // Some providers return `assistantId`, others nest id. Prefer explicit, fallback to nested.
+    const externalId =
+      (created as any).assistantId ??
+      (created as any)?.assistant?.id ??
+      (created as any)?.id;
+
+    if (!externalId) {
+      throw new Error("Assistant id missing from provider response");
+    }
+
+    // Only set the foreign key `userId`. Do not redundantly `connect` the relation.
     const aiAgent = await prismaClient.aiAgents.create({
       data: {
-        id: created.assistantId,
+        id: externalId,
         model: "gpt-4o",
         provider: "openai",
         prompt: aiAgentPrompt,

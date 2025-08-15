@@ -1,6 +1,7 @@
 import React from "react";
 import AiAgentSidebar from "./_components/AiAgentSidebar";
-import ModelSection from "./_components/ModalSection";
+// FIX: actual file is ModelSection.tsx (not ModalSection)
+import ModelSection from "./_components/ModelSection";
 import { onAuthenticateUser } from "@/actions/auth";
 import { redirect } from "next/navigation";
 import { UserWithAiAgent } from "@/lib/type";

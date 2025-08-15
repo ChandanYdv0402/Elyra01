@@ -1,6 +1,5 @@
 import React from "react";
 import AiAgentSidebar from "./_components/AiAgentSidebar";
-// FIX: actual file is ModelSection.tsx (not ModalSection)
 import ModelSection from "./_components/ModelSection";
 import { onAuthenticateUser } from "@/actions/auth";
 import { redirect } from "next/navigation";
@@ -13,7 +12,11 @@ const page = async () => {
   }
   const user = checkUser.user as UserWithAiAgent;
 
-  console.log("User data:", checkUser.user);
+  if (process.env.NODE_ENV !== "production") {
+    // Avoid noisy logs in prod
+    // eslint-disable-next-line no-console
+    console.log("User data:", checkUser.user);
+  }
 
   return (
     <div className="w-full flex h-[80vh] text-primary border border-border rounded-se-xl">

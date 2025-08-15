@@ -18,14 +18,10 @@ interface Props {
 
 const MIN_LEN = 2;
 const MAX_LEN = 50;
-const NAME_REGEX = /^[a-zA-Z0-9 _-]+$/; // allow letters, digits, space, underscore, hyphen
+const NAME_REGEX = /^[a-zA-Z0-9 _-]+$/;
 
 const toTitle = (s: string) =>
-  s
-    .split(" ")
-    .filter(Boolean)
-    .map((w) => w[0]?.toUpperCase() + w.slice(1).toLowerCase())
-    .join(" ");
+  s.split(" ").filter(Boolean).map((w) => w[0]?.toUpperCase() + w.slice(1).toLowerCase()).join(" ");
 
 const CreateAssistantModal = ({ isOpen, onClose, userId }: Props) => {
   const [name, setName] = useState("");
@@ -41,14 +37,20 @@ const CreateAssistantModal = ({ isOpen, onClose, userId }: Props) => {
     inputRef.current?.focus();
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
-  const handleBackdrop = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleBackdrop = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) onClose();
-  };
+  }, [onClose]);
 
   const validate = (value: string) => {
     const clean = value.trim();
@@ -58,22 +60,13 @@ const CreateAssistantModal = ({ isOpen, onClose, userId }: Props) => {
     return null;
   };
 
-  const handleBlur = () => {
-    const t = toTitle(name.trim());
-    setName(t);
-    if (err) setErr(validate(t));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
 
     const clean = name.trim();
     const v = validate(clean);
-    if (v) {
-      setErr(v);
-      return;
-    }
+    if (v) return setErr(v);
 
     setLoading(true);
     setErr(null);
@@ -94,14 +87,14 @@ const CreateAssistantModal = ({ isOpen, onClose, userId }: Props) => {
 
   return (
     <div
-      className="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 animate-in fade-in-0"
       onMouseDown={handleBackdrop}
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
       aria-describedby={descId}
     >
-      <div className="bg-muted/80 rounded-lg w-full max-w-md p-6 border border-input shadow-xl">
+      <div className="bg-muted/80 rounded-lg w-full max-w-md p-6 border border-input shadow-xl animate-in zoom-in-95 duration-150">
         <div className="flex justify-between items-center mb-6">
           <h2 id={titleId} className="text-xl font-semibold">Create Assistant</h2>
           <button onClick={onClose} aria-label="Close dialog" className="text-neutral-400 hover:text-white">
@@ -125,7 +118,11 @@ const CreateAssistantModal = ({ isOpen, onClose, userId }: Props) => {
                 setName(e.target.value.slice(0, MAX_LEN));
                 setErr(null);
               }}
-              onBlur={handleBlur}
+              onBlur={() => {
+                const t = toTitle(name.trim());
+                setName(t);
+                if (err) setErr(validate(t));
+              }}
               placeholder="Enter assistant name"
               className="bg-neutral-800 border-neutral-700"
               required

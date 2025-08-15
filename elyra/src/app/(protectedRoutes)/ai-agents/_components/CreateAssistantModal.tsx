@@ -17,6 +17,15 @@ interface Props {
 }
 
 const MIN_LEN = 2;
+const MAX_LEN = 50;
+const NAME_REGEX = /^[a-zA-Z0-9 _-]+$/; // allow letters, digits, space, underscore, hyphen
+
+const toTitle = (s: string) =>
+  s
+    .split(" ")
+    .filter(Boolean)
+    .map((w) => w[0]?.toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
 
 const CreateAssistantModal = ({ isOpen, onClose, userId }: Props) => {
   const [name, setName] = useState("");
@@ -37,22 +46,32 @@ const CreateAssistantModal = ({ isOpen, onClose, userId }: Props) => {
 
   if (!isOpen) return null;
 
-  const handleBackdrop = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+  const handleBackdrop = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) onClose();
-  }, [onClose]);
+  };
 
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setName(e.target.value);
-    setErr(null);
-  }, []);
+  const validate = (value: string) => {
+    const clean = value.trim();
+    if (clean.length < MIN_LEN) return `Name must be at least ${MIN_LEN} characters`;
+    if (clean.length > MAX_LEN) return `Name must be at most ${MAX_LEN} characters`;
+    if (!NAME_REGEX.test(clean)) return "Only letters, numbers, spaces, _ and - are allowed";
+    return null;
+  };
 
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+  const handleBlur = () => {
+    const t = toTitle(name.trim());
+    setName(t);
+    if (err) setErr(validate(t));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
 
     const clean = name.trim();
-    if (clean.length < MIN_LEN) {
-      setErr(`Name must be at least ${MIN_LEN} characters`);
+    const v = validate(clean);
+    if (v) {
+      setErr(v);
       return;
     }
 
@@ -71,7 +90,7 @@ const CreateAssistantModal = ({ isOpen, onClose, userId }: Props) => {
     } finally {
       setLoading(false);
     }
-  }, [loading, name, onClose, router, userId]);
+  };
 
   return (
     <div
@@ -94,12 +113,19 @@ const CreateAssistantModal = ({ isOpen, onClose, userId }: Props) => {
 
         <form onSubmit={handleSubmit} noValidate>
           <div className="mb-2">
-            <label className="block font-medium mb-2" htmlFor="assistant-name">Assistant Name</label>
+            <div className="flex items-center justify-between">
+              <label className="font-medium" htmlFor="assistant-name">Assistant Name</label>
+              <span className="text-xs text-muted-foreground">{name.trim().length}/{MAX_LEN}</span>
+            </div>
             <Input
               id="assistant-name"
               ref={inputRef}
               value={name}
-              onChange={handleChange}
+              onChange={(e) => {
+                setName(e.target.value.slice(0, MAX_LEN));
+                setErr(null);
+              }}
+              onBlur={handleBlur}
               placeholder="Enter assistant name"
               className="bg-neutral-800 border-neutral-700"
               required
@@ -111,7 +137,7 @@ const CreateAssistantModal = ({ isOpen, onClose, userId }: Props) => {
 
           <div className="flex justify-end gap-3 mt-4">
             <Button type="button" onClick={onClose} variant="outline">Cancel</Button>
-            <Button type="submit" disabled={!name.trim() || loading}>
+            <Button type="submit" disabled={!name.trim() || !!validate(name) || loading}>
               {loading ? (<><Loader2 className="mr-2 animate-spin" />Creating...</>) : "Create Assistant"}
             </Button>
           </div>

@@ -4,58 +4,56 @@ import { aiAgentPrompt } from "@/lib/data";
 import { prismaClient } from "@/lib/prismaClient";
 import { vapiServer } from "@/lib/vapi/vapiServer";
 
+const MODEL = "gpt-4o";
+const PROVIDER = "openai";
+const DEFAULT_TEMP = 0.5;
+
+const buildFirstMessage = (name: string) =>
+  `Hi there, this is ${name} from customer support. How can I help you today?`;
+
+const buildModelConfig = (systemPrompt: string, withTemp = true) => ({
+  model: MODEL,
+  provider: PROVIDER,
+  messages: [{ role: "system", content: systemPrompt }],
+  ...(withTemp ? { temperature: DEFAULT_TEMP } : {}),
+});
+
 const sanitize = (s: string) => s?.trim();
 
 export const createAssistant = async (rawName: string, rawUserId: string) => {
   try {
     const name = sanitize(rawName);
     const userId = sanitize(rawUserId);
-
-    if (!name || name.length < 2) {
-      return { success: false, status: 400, message: "Name must be at least 2 characters" };
-    }
-    if (!userId) {
-      return { success: false, status: 400, message: "Missing userId" };
-    }
+    if (!name || name.length < 2) return { success: false, status: 400, message: "Name must be at least 2 characters" };
+    if (!userId) return { success: false, status: 400, message: "Missing userId" };
 
     const created = await vapiServer.assistants.create({
       name,
-      firstMessage: `Hi there, this is ${name} from customer support. How can I help you today?`,
-      model: {
-        model: "gpt-4o",
-        provider: "openai",
-        messages: [{ role: "system", content: aiAgentPrompt }],
-        temperature: 0.5,
-      },
+      firstMessage: buildFirstMessage(name),
+      model: buildModelConfig(aiAgentPrompt),
       serverMessages: [],
     });
 
     const externalId =
-      (created as any).assistantId ??
-      (created as any)?.assistant?.id ??
-      (created as any)?.id;
-
-    if (!externalId) {
-      return { success: false, status: 502, message: "Provider did not return assistant id" };
-    }
+      (created as any).assistantId ?? (created as any)?.assistant?.id ?? (created as any)?.id;
+    if (!externalId) return { success: false, status: 502, message: "Provider did not return assistant id" };
 
     const aiAgent = await prismaClient.aiAgents.create({
       data: {
         id: externalId,
-        model: "gpt-4o",
-        provider: "openai",
+        model: MODEL,
+        provider: PROVIDER,
         prompt: aiAgentPrompt,
         name,
-        firstMessage: `Hi there, this is ${name} from customer support. How can I help you today?`,
+        firstMessage: buildFirstMessage(name),
         userId,
       },
     });
 
     return { success: true, status: 200, data: aiAgent };
   } catch (error: any) {
-    const msg = error?.message ?? "Failed to create agent";
     console.error("Error creating agent:", error);
-    return { success: false, status: 500, message: msg };
+    return { success: false, status: 500, message: error?.message ?? "Failed to create agent" };
   }
 };
 
@@ -70,11 +68,7 @@ export const updateAssistant = async (
 
     await vapiServer.assistants.update(assistantId, {
       firstMessage,
-      model: {
-        model: "gpt-4o",
-        provider: "openai",
-        messages: [{ role: "system", content: systemPrompt }],
-      },
+      model: buildModelConfig(systemPrompt, /*withTemp*/ false),
       serverMessages: [],
     });
 
@@ -85,8 +79,7 @@ export const updateAssistant = async (
 
     return { success: true, status: 200, data: updated };
   } catch (error: any) {
-    const msg = error?.message ?? "Failed to update agent";
     console.error("Error updating agent:", error);
-    return { success: false, status: 500, message: msg };
+    return { success: false, status: 500, message: error?.message ?? "Failed to update agent" };
   }
 };

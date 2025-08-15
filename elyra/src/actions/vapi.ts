@@ -67,7 +67,8 @@ export const updateAssistant = async (
     const firstMessage = sanitize(rawFirstMessage) || "Hello! How can I help you today?";
     const systemPrompt = sanitize(rawSystemPrompt) || aiAgentPrompt;
 
-    const updatedExternal = await vapiServer.assistants.update(assistantId, {
+    // Provider update does not need to wait for DB update.
+    const providerUpdate = vapiServer.assistants.update(assistantId, {
       firstMessage,
       model: {
         model: FALLBACK_MODEL,
@@ -77,13 +78,25 @@ export const updateAssistant = async (
       serverMessages: [],
     });
 
-    const providerModel = (updatedExternal as any)?.model?.model ?? FALLBACK_MODEL;
-    const providerName = (updatedExternal as any)?.model?.provider ?? FALLBACK_PROVIDER;
-
-    const updated = await prismaClient.aiAgents.update({
+    const dbUpdate = prismaClient.aiAgents.update({
       where: { id: assistantId },
-      data: { firstMessage, prompt: systemPrompt, model: providerModel, provider: providerName },
+      data: { firstMessage, prompt: systemPrompt, model: FALLBACK_MODEL, provider: FALLBACK_PROVIDER },
     });
+
+    const [external, updated] = await Promise.all([providerUpdate, dbUpdate]);
+
+    // If provider returns specific model/provider, patch DB (best-effort).
+    const providerModel = (external as any)?.model?.model;
+    const providerName = (external as any)?.model?.provider;
+    if (providerModel || providerName) {
+      await prismaClient.aiAgents.update({
+        where: { id: assistantId },
+        data: {
+          ...(providerModel ? { model: providerModel } : {}),
+          ...(providerName ? { provider: providerName } : {}),
+        },
+      });
+    }
 
     return { success: true, status: 200, data: updated };
   } catch (error: any) {

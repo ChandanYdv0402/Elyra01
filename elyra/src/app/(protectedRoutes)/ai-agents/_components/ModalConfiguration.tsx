@@ -17,7 +17,6 @@ const ModelConfiguration = () => {
   const [loading, setLoading] = useState(false);
   const [firstMessage, setFirstMessage] = useState("");
   const [systemPrompt, setSystemPrompt] = useState("");
-
   const [initialFirst, setInitialFirst] = useState("");
   const [initialPrompt, setInitialPrompt] = useState("");
 
@@ -37,6 +36,19 @@ const ModelConfiguration = () => {
     [firstMessage, initialFirst, systemPrompt, initialPrompt]
   );
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        if (!loading && isDirty) {
+          handleUpdateAssistant();
+        }
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [loading, isDirty]); // eslint-disable-line
+
   if (!assistant) {
     return (
       <div className="flex justify-center items-center h-[500px] w-full">
@@ -53,14 +65,15 @@ const ModelConfiguration = () => {
   const handleUpdateAssistant = async () => {
     if (!isDirty) return;
     setLoading(true);
+    const tId = toast.loading("Updating assistant...");
     try {
       const res = await updateAssistant(assistant.id, firstMessage, systemPrompt);
       if (!res.success) throw new Error(res.message);
-      toast.success("Assistant updated successfully");
+      toast.success("Assistant updated successfully", { id: tId });
       setInitialFirst(firstMessage);
       setInitialPrompt(systemPrompt);
-    } catch (error) {
-      toast.error("Failed to update assistant");
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to update assistant", { id: tId });
     } finally {
       setLoading(false);
     }

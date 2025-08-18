@@ -1,96 +1,121 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import type React from "react";
-
-import { useState } from "react";
-import { Loader2, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import React, { useEffect, useState } from "react";
+import { Info, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import ConfigField from "./ConfigField";
+import DropdownSelect from "./DropDownSelect";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { useAiAgentStore } from "@/store/useAiAgentStore";
+import { updateAssistant } from "@/actions/vapi";
 import { toast } from "sonner";
-import { createAssistant } from "@/actions/vapi";
-import { useRouter } from "next/navigation";
 
-interface Props {
-  isOpen: boolean;
-  onClose: () => void;
-  userId:string
-}
+const ModelConfiguration = () => {
+  const { assistant } = useAiAgentStore();
 
-const CreateAssistantModal = ({ isOpen, onClose, userId }: Props) => {
-  const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
-  if (!isOpen) return null;
+  const [firstMessage, setFirstMessage] = useState("");
+  const [systemPrompt, setSystemPrompt] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  useEffect(() => {
+    if (assistant) {
+      setFirstMessage(assistant?.firstMessage || "");
+      setSystemPrompt(assistant?.prompt || "");
+    }
+  }, [assistant]);
+
+  if (!assistant) {
+    return (
+      <div className="flex justify-center items-center h-[500px] w-full">
+        <div className="bg-neutral-900 rounded-xl p-6 w-full">
+          <p className="text-primary/80 text-center">
+            No assistant selected. Please select an assistant to configure the
+            model settings.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const handleUpdateAssistant = async () => {
     setLoading(true);
     try {
-      const res = await createAssistant(name, userId);
+      const res = await updateAssistant(
+        assistant.id,
+        firstMessage,
+        systemPrompt
+      );
+
       if (!res.success) {
         throw new Error(res.message);
       }
-      router.refresh();
-      setName("");
-      onClose();
-      toast.success("Assistant created successfully");
+      toast.success("Assistant updated successfully");
     } catch (error) {
-      // console.error("Error creating assistant:", error);
-      toast.error("Failed to create assistant");
+      console.error("Error updating assistant:", error);
+      toast.error("Failed to update assistant");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-      <div className="bg-muted/80 rounded-lg w-full max-w-md p-6 border border-input shadow-xl">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold">Create Assistant</h2>
-          <button
-            onClick={onClose}
-            className="text-neutral-400 hover:text-white"
-          >
-            <X className="h-5 w-5" />
-          </button>
+    <div className="bg-neutral-900 rounded-xl p-6 mb-6">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold">Model</h2>
+        <Button onClick={handleUpdateAssistant} disabled={loading}>
+          {loading ? (
+            <>
+              <Loader2 className="animate-spin mr-2" />
+              Updating...
+            </>
+          ) : (
+            "Update Assistant"
+          )}
+        </Button>
+      </div>
+      <p className="text-neutral-400 mb-6">
+        Configure the behavior of the assistant.
+      </p>
+
+      <div className="mb-6">
+        <div className="flex items-center mb-2">
+          <label className="font-medium">First Message</label>
+          <Info className="h-4 w-4 text-neutral-500 ml-2" />
         </div>
+        <Input
+          value={firstMessage}
+          onChange={(e) => setFirstMessage(e.target.value)}
+          className="bg-primary/10 border-input"
+        />
+      </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="mb-6">
-            <label className="block font-medium mb-2">Assistant Name</label>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter assistant name"
-              className="bg-neutral-800 border-neutral-700"
-              required
-            />
-            <p className="text-xs text-neutral-400 mt-2">
-              This name will be used to identify your assistant.
-            </p>
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center">
+            <label className="font-medium">System Prompt</label>
+            <Info className="h-4 w-4 text-neutral-500 ml-2" />
           </div>
+        </div>
+        <Textarea
+          value={systemPrompt}
+          onChange={(e) => setSystemPrompt(e.target.value)}
+          className="min-h-[300px] max-h-[500px] bg-primary/10 border-input font-mono text-sm"
+        />
+      </div>
 
-          <div className="flex justify-end gap-3">
-            <Button type="button" onClick={onClose} variant="outline">
-              Cancel
-            </Button>
-            <Button type="submit" disabled={!name.trim() || loading} >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                "Create Assistant"
-              )}
-            </Button>
-          </div>
-        </form>
+      <div className="grid grid-cols-2 gap-6">
+        <ConfigField label="Provider">
+          <DropdownSelect value={assistant?.provider || ""} />
+        </ConfigField>
+
+        <ConfigField label="Model" showInfo={true}>
+          <DropdownSelect value={assistant?.model || ""} />
+        </ConfigField>
       </div>
     </div>
   );
 };
 
-export default CreateAssistantModal;
+export default ModelConfiguration;
